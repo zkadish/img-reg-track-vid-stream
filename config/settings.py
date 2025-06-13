@@ -3,7 +3,7 @@
 VIDEO_SOURCE = 0  # Use 0 for webcam, or provide path to video file
 FRAME_WIDTH = 640 # 640 1280
 FRAME_HEIGHT = 480 # 480 720
-FPS = 60 # 30 this setting in not being used
+FPS = 30 # 30 this setting in not being used
 
 # Tracking settings
 TRACKER_TYPE = "CSRT"  # Options: CSRT, KCF, MOSSE
