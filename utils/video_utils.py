@@ -1,0 +1,30 @@
+import cv2
+import numpy as np
+from typing import Tuple, Optional
+
+def get_video_source(source: int = 0) -> cv2.VideoCapture:
+    """Initialize and return a video capture object"""
+    cap = cv2.VideoCapture(source)
+    if not cap.isOpened():
+        raise ValueError(f"Could not open video source {source}")
+    return cap
+
+def read_frame(cap: cv2.VideoCapture) -> Tuple[bool, Optional[np.ndarray]]:
+    """Read a frame from the video capture"""
+    ret, frame = cap.read()
+    return ret, frame if ret else None
+
+def resize_frame(frame: np.ndarray, width: int = None, height: int = None) -> np.ndarray:
+    """Resize frame while maintaining aspect ratio"""
+    if width is None and height is None:
+        return frame
+
+    h, w = frame.shape[:2]
+    if width is None:
+        aspect = height / float(h)
+        dim = (int(w * aspect), height)
+    else:
+        aspect = width / float(w)
+        dim = (width, int(h * aspect))
+
+    return cv2.resize(frame, dim, interpolation=cv2.INTER_AREA) 
