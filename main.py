@@ -5,6 +5,7 @@ from pathlib import Path
 from src.detector import ObjectDetector
 from src.tracker import ImageTracker
 from src.ui import TrackingUI
+from src.motion_detector import MotionDetector
 from utils.video_utils import get_video_source, read_frame
 from utils.preprocessing import preprocess_frame
 from config.settings import VIDEO_SOURCE, PREPROCESSING, TRACKER_TYPE
@@ -14,11 +15,13 @@ def main():
         # Initialize video capture
         cap = get_video_source(VIDEO_SOURCE)
         
-        # Initialize YOLO detector and tracker
+        # Initialize components
         print("Initializing YOLO detector...")
         detector = ObjectDetector(confidence=0.5)
         print("Initializing tracker...")
         tracker = ImageTracker(tracker_type=TRACKER_TYPE)
+        print("Initializing motion detector...")
+        motion_detector = MotionDetector(min_area=100, history=5)
         
         # Initialize UI
         ui = TrackingUI()
@@ -83,20 +86,40 @@ def main():
                 enhance_contrast=PREPROCESSING["enhance_contrast"]
             )
             
+            # Step 1: Detect motion
+            has_motion, motion_regions = motion_detector.detect(processed_frame)
+            
             if not tracking:
-                # Detect objects
-                detections = detector.detect(processed_frame)
-                
-                # Draw detections on original frame
-                frame = detector.draw_detections(frame, detections)
-                
-                # If we have detections, start tracking the first one
-                if detections:
-                    bbox, confidence, class_id = detections[0]
-                    current_class = detector.class_names[class_id]
-                    current_conf = confidence
-                    tracking = tracker.initialize(frame, bbox, current_class, current_conf)
-                    print(f"Started tracking {current_class} with {TRACKER_TYPE} tracker")
+                if has_motion:
+                    # Step 2: Only process regions with motion
+                    for region in motion_regions:
+                        x, y, w, h = region.bbox
+                        roi = processed_frame[y:y+h, x:x+w]
+                        if roi.size > 0:
+                            # Step 3: Detect objects in motion regions
+                            detections = detector.detect(roi)
+                            
+                            # Adjust detection coordinates to original frame
+                            adjusted_detections = []
+                            for bbox, conf, class_id in detections:
+                                bx, by, bw, bh = bbox
+                                adjusted_detections.append((
+                                    (bx + x, by + y, bw, bh),
+                                    conf,
+                                    class_id
+                                ))
+                            
+                            # Draw detections on original frame
+                            frame = detector.draw_detections(frame, adjusted_detections)
+                            
+                            # If we have detections, start tracking the first one
+                            if adjusted_detections:
+                                bbox, confidence, class_id = adjusted_detections[0]
+                                current_class = detector.class_names[class_id]
+                                current_conf = confidence
+                                tracking = tracker.initialize(frame, bbox, current_class, current_conf)
+                                print(f"Started tracking {current_class} with {TRACKER_TYPE} tracker")
+                                break
             else:
                 # Update tracker
                 success, bbox = tracker.update(frame)
@@ -108,13 +131,17 @@ def main():
                     current_class = None
                     current_conf = None
             
+            # Draw motion visualization
+            frame = motion_detector.draw_motion(frame, motion_regions)
+            
             # Update UI with tracking information
             tracking_info = {
                 'tracking': tracking,
                 'object_class': current_class,
                 'confidence': current_conf,
                 'tracker_type': TRACKER_TYPE,
-                'fps': fps
+                'fps': fps,
+                'motion_detected': has_motion
             }
             
             key = ui.update_display(frame, tracking_info)
