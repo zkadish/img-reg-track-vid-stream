@@ -13,7 +13,7 @@ CONFIDENCE_THRESHOLD = 0.5
 SHOW_FPS = True
 SHOW_BOUNDING_BOX = True
 BOUNDING_BOX_COLOR = (0, 255, 0)  # Green in BGR
-BOUNDING_BOX_THICKNESS = 2
+BOUNDING_BOX_THICKNESS = 1 # this doesn't look like it's being used
 
 # Preprocessing settings
 # Turn off preprocessing for performance. Turning off preprocessing also improves class detection.
