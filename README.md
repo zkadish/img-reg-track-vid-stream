@@ -1,18 +1,30 @@
-# Image Recognition and Tracking from Video Stream
+# Real-Time Object Detection and Tracking
 
-This project implements real-time image recognition and tracking from a video stream using computer vision techniques.
+This project implements real-time object detection and tracking using YOLOv8 for detection and OpenCV's tracking algorithms for continuous object tracking.
 
 ## Features
-- Real-time video stream processing
-- Image recognition and tracking
-- Configurable tracking parameters
-- Support for multiple tracking methods
 
-## Setup
-1. Create a virtual environment:
+- Real-time object detection using YOLOv8
+- Multiple tracking algorithms (CSRT, KCF, MOSSE)
+- Frame preprocessing for improved performance
+- FPS display
+- Object class and confidence display
+- Interactive controls
+
+## Requirements
+
+- Python 3.8+
+- OpenCV
+- PyTorch
+- Ultralytics YOLO
+- NumPy
+
+## Installation
+
+1. Clone the repository:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+git clone <repository-url>
+cd <repository-name>
 ```
 
 2. Install dependencies:
@@ -20,21 +32,53 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-3. Run the application:
+## Usage
+
+Run the main script:
 ```bash
 python main.py
 ```
 
-## Project Structure
-- `src/`: Core functionality
-  - `tracker.py`: Image tracking implementation
-  - `detector.py`: Image detection implementation
-- `utils/`: Helper functions
-  - `video_utils.py`: Video stream handling
-  - `image_utils.py`: Image processing utilities
-- `config/`: Configuration files
-  - `settings.py`: Application settings
-- `main.py`: Main application entry point
+### Controls
+
+- Press 'q' to quit the application
+- Press 'r' to reset tracking (useful when tracking is lost or you want to track a different object)
+
+### Display Information
+
+The application shows:
+- Bounding box around the tracked object
+- Object class name
+- Detection confidence
+- Tracker type
+- Current FPS
 
 ## Configuration
-Edit `config/settings.py` to modify tracking parameters and video source settings. 
+
+Adjust settings in `config/settings.py`:
+- Video source
+- Frame dimensions
+- Tracker type
+- Confidence threshold
+- Preprocessing options
+
+## Project Structure
+
+```
+.
+├── config/
+│   └── settings.py
+├── src/
+│   ├── detector.py
+│   └── tracker.py
+├── utils/
+│   ├── preprocessing.py
+│   └── video_utils.py
+├── main.py
+├── requirements.txt
+└── README.md
+```
+
+## License
+
+[Your License] 
