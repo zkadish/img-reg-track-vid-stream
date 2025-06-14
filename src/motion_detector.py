@@ -36,8 +36,7 @@ class MotionDetector:
         
         # Visualization settings
         self.colors = {
-            'contour': (0, 255, 0),    # Green
-            'trail': (0, 255, 255)     # Yellow
+            'contour': (0, 0, 255)    # Red
         }
         
         # Store previous frame for motion visualization
@@ -106,25 +105,13 @@ class MotionDetector:
         return distance < threshold
     
     def draw_motion(self, frame: np.ndarray, motion_regions: List[MotionRegion]) -> np.ndarray:
-        """Draw motion regions and their trajectories on the frame with modern visualization"""
+        """Draw motion regions on the frame with modern visualization"""
         # Create a copy of the frame for drawing
         vis_frame = frame.copy()
         
         for region in motion_regions:
-            # Draw actual contour of motion
+            # Draw actual contour of motion with 2px red line
             cv2.drawContours(vis_frame, [region.contour], -1, self.colors['contour'], 2)
-            
-            # Draw motion trail with gradient effect
-            if len(region.history) > 1:
-                for i in range(1, len(region.history)):
-                    # Calculate alpha based on position in history
-                    alpha = i / len(region.history)
-                    color = (
-                        int(self.colors['trail'][0] * alpha),
-                        int(self.colors['trail'][1] * alpha),
-                        int(self.colors['trail'][2] * alpha)
-                    )
-                    cv2.line(vis_frame, region.history[i-1], region.history[i], color, 2)
         
         # Blend the visualization with the original frame
         alpha = 0.7
