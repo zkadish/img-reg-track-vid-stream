@@ -16,8 +16,8 @@ def main():
         cap = get_video_source(VIDEO_SOURCE)
         
         # Initialize components
-        print("Initializing motion detector...")
-        motion_detector = MotionDetector(min_area=100, history=5)
+        print("Initializing YOLO detector...")
+        detector = ObjectDetector(confidence=0.5)
         
         # Initialize UI
         ui = TrackingUI()
@@ -35,7 +35,7 @@ def main():
             print("Error: Could not read frame")
             return
         
-        print("Starting motion detection...")
+        print("Starting image recognition...")
         
         while True:
             # Read frame from video stream
@@ -62,17 +62,17 @@ def main():
                 enhance_contrast=PREPROCESSING["enhance_contrast"]
             )
             
-            # Detect motion
-            has_motion, motion_regions = motion_detector.detect(processed_frame)
+            # Perform object detection on the entire frame
+            detections = detector.detect(processed_frame)
             
-            # Draw motion visualization
-            frame = motion_detector.draw_motion(frame, motion_regions)
+            # Draw detections on frame
+            frame = detector.draw_detections(frame, detections)
             
             # Update UI with tracking information
             tracking_info = {
-                'tracking': True,
+                'tracking': False,
                 'fps': fps,
-                'motion_detected': has_motion
+                'motion_detected': False
             }
             
             key = ui.update_display(frame, tracking_info)
