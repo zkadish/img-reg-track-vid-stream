@@ -36,7 +36,7 @@ class MotionDetector:
         
         # Visualization settings
         self.colors = {
-            'contour': (0, 0, 255)    # Red
+            'contour': (0, 255, 0)    # GREEN
         }
         
         # Store previous frame for motion visualization
@@ -110,8 +110,8 @@ class MotionDetector:
         vis_frame = frame.copy()
         
         for region in motion_regions:
-            # Draw actual contour of motion with 2px red line
-            cv2.drawContours(vis_frame, [region.contour], -1, self.colors['contour'], 2)
+            # Draw actual contour of motion with 1px red line
+            cv2.drawContours(vis_frame, [region.contour], -1, self.colors['contour'], 1)
         
         # Blend the visualization with the original frame
         alpha = 0.7
