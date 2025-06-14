@@ -7,7 +7,14 @@ class ImageTracker:
         """
         Initialize tracking algorithm
         Args:
-            tracker_type: Type of tracker to use ('CSRT', 'KCF', or 'MOSSE')
+            tracker_type: Type of tracker to use. Available options:
+                - 'CSRT': Discriminative Correlation Filter with Channel and Spatial Reliability
+                - 'KCF': Kernelized Correlation Filter
+                - 'MOSSE': Minimum Output Sum of Squared Error
+                - 'MIL': Multiple Instance Learning
+                - 'BOOSTING': AdaBoost classifier
+                - 'MEDIANFLOW': Median Flow tracker
+                - 'TLD': Tracking, Learning and Detection
         """
         self.tracker_type = tracker_type
         self.tracker = self._create_tracker()
@@ -24,6 +31,14 @@ class ImageTracker:
             return cv2.legacy.TrackerKCF_create()
         elif self.tracker_type == "MOSSE":
             return cv2.legacy.TrackerMOSSE_create()
+        elif self.tracker_type == "MIL":
+            return cv2.legacy.TrackerMIL_create()
+        elif self.tracker_type == "BOOSTING":
+            return cv2.legacy.TrackerBoosting_create()
+        elif self.tracker_type == "MEDIANFLOW":
+            return cv2.legacy.TrackerMedianFlow_create()
+        elif self.tracker_type == "TLD":
+            return cv2.legacy.TrackerTLD_create()
         else:
             print(f"Warning: Unknown tracker type '{self.tracker_type}'. Using CSRT instead.")
             return cv2.legacy.TrackerCSRT_create()

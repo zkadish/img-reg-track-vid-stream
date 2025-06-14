@@ -6,7 +6,7 @@ FRAME_HEIGHT = 480 # 480 720
 FPS = 30 # 30 this setting in not being used
 
 # Tracking settings
-TRACKER_TYPE = "CSRT"  # Options: CSRT, KCF, MOSSE
+TRACKER_TYPE = "TLD"  # Options: CSRT, KCF, MOSSE, MIL, BOOSTING, MEDIANFLOW, TLD
 CONFIDENCE_THRESHOLD = 0.5
 
 # Display settings
@@ -18,23 +18,23 @@ BOUNDING_BOX_THICKNESS = 2
 # Preprocessing settings
 PREPROCESSING = {
     "enabled": True,
-    "target_size": (640, 480),  # 640x640 YOLO's preferred input size
-    "normalize": True,
-    "denoise": False,  # Disabled by default for performance
+    "target_size": (640, 480),  # Match the video resolution
+    "normalize": False,  # Disabled to prevent darkening
+    "denoise": False,  # Disabled for performance
     "enhance_contrast": True,
     "gaussian_blur": {
-        "enabled": False,  # Disabled by default for performance
+        "enabled": False,
         "kernel_size": (5, 5),
         "sigma": 0.0
     },
     "edge_enhancement": {
-        "enabled": False,  # Disabled by default for performance
+        "enabled": False,
         "low_threshold": 50,
         "high_threshold": 150
     },
     "brightness_contrast": {
-        "enabled": False,  # Disabled by default for performance
-        "brightness": 1.0,
-        "contrast": 1.0
+        "enabled": True,  # Enable brightness/contrast adjustment
+        "brightness": 1.2,  # Increase brightness by 20%
+        "contrast": 1.1  # Increase contrast by 10%
     }
 } 
