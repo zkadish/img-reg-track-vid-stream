@@ -14,3 +14,9 @@ Would you like me to:
 2. Implement tracking for detected objects?
 3. Add performance metrics (FPS counter)?
 4. Make any other modifications to the current implementation?
+
+Would you like me to:
+1. Add more visual feedback options?
+2. Implement additional selection tools (like polygon selection)?
+3. Add more UI customization options?
+4. Make any other improvements to the interface?

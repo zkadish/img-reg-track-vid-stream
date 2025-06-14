@@ -4,6 +4,7 @@ import time
 from pathlib import Path
 from src.detector import ObjectDetector
 from src.tracker import ImageTracker
+from src.ui import TrackingUI
 from utils.video_utils import get_video_source, read_frame
 from utils.preprocessing import preprocess_frame
 from config.settings import VIDEO_SOURCE, PREPROCESSING, TRACKER_TYPE
@@ -19,6 +20,9 @@ def main():
         print("Initializing tracker...")
         tracker = ImageTracker(tracker_type=TRACKER_TYPE)
         
+        # Initialize UI
+        ui = TrackingUI()
+        
         print(f"Using {TRACKER_TYPE} tracker")
         print("Press 'q' to quit")
         print("Press 'r' to reset tracking")
@@ -33,6 +37,27 @@ def main():
         current_class = None
         current_conf = None
         
+        # Wait for first frame
+        ret, frame = read_frame(cap)
+        if not ret:
+            print("Error: Could not read frame")
+            return
+            
+        # Let user select target
+        print("Select target object to track...")
+        selected_roi = ui.select_target(frame)
+        if selected_roi is None:
+            print("Target selection cancelled")
+            return
+            
+        # Initialize tracker with selected ROI
+        tracking = tracker.initialize(frame, selected_roi)
+        if not tracking:
+            print("Failed to initialize tracker")
+            return
+            
+        print("Tracking initialized. Press 'q' to quit or 'r' to reset")
+        
         while True:
             # Read frame from video stream
             ret, frame = read_frame(cap)
@@ -46,13 +71,8 @@ def main():
             if frame_count >= 30:  # Calculate FPS every 30 frames
                 end_time = time.time()
                 fps = frame_count / (end_time - start_time)
-                print(f"Current FPS: {fps:.2f}")
                 frame_count = 0
                 start_time = time.time()
-            
-            # Print frame dimensions
-            height, width = frame.shape[:2]
-            print(f"Output frame size: {width}x{height}")
             
             # Apply preprocessing
             processed_frame = preprocess_frame(
@@ -88,15 +108,18 @@ def main():
                     current_class = None
                     current_conf = None
             
-            # Add FPS text to frame
-            cv2.putText(frame, f"FPS: {fps:.2f}", (10, 30), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            # Update UI with tracking information
+            tracking_info = {
+                'tracking': tracking,
+                'object_class': current_class,
+                'confidence': current_conf,
+                'tracker_type': TRACKER_TYPE,
+                'fps': fps
+            }
             
-            # Display the frame
-            cv2.imshow('Object Detection', frame)
+            key = ui.update_display(frame, tracking_info)
             
             # Handle key presses
-            key = cv2.waitKey(1) & 0xFF
             if key == ord('q'):
                 break
             elif key == ord('r'):
@@ -104,6 +127,12 @@ def main():
                 current_class = None
                 current_conf = None
                 print("Reset tracking")
+                # Let user select new target
+                selected_roi = ui.select_target(frame)
+                if selected_roi is not None:
+                    tracking = tracker.initialize(frame, selected_roi)
+                    if tracking:
+                        print("Tracking reinitialized")
     
     except Exception as e:
         print(f"Error: {str(e)}")
@@ -115,6 +144,8 @@ def main():
         # Clean up
         if 'cap' in locals():
             cap.release()
+        if 'ui' in locals():
+            ui.cleanup()
         cv2.destroyAllWindows()
 
 if __name__ == "__main__":
