@@ -1,11 +1,11 @@
 I'm strting a new project that will recognize and track an image from a video stream. Can you suggest a basic file structure and essential dependencies I should consider?
 
 The current implementation provides a foundation that you can build upon. Here are some suggested next steps:
-1. Implement image recognition using a pre-trained model (like YOLO or SSD)
-2. Add support for multiple tracking algorithms
-3. Implement frame preprocessing for better tracking
-4. Add logging and error handling
-5. Create a user interface for selecting the target image
+1. Implement image recognition using a pre-trained model (like YOLO or SSD) 1 YOLO
+2. Add support for multiple tracking algorithms 4 along the way
+3. Implement frame preprocessing for better tracking 2 along the way
+4. Add logging and error handling 3 along the way
+5. Create a user interface for selecting the target image - the next step
    
 Would you like me to help you implement any of these next steps or would you like to explore a specific aspect of the current implementation?
 
