@@ -30,6 +30,8 @@ def main():
         
         # Tracking state
         tracking = False
+        current_class = None
+        current_conf = None
         
         while True:
             # Read frame from video stream
@@ -71,8 +73,10 @@ def main():
                 # If we have detections, start tracking the first one
                 if detections:
                     bbox, confidence, class_id = detections[0]
-                    tracking = tracker.initialize(frame, bbox)
-                    print(f"Started tracking with {TRACKER_TYPE} tracker")
+                    current_class = detector.class_names[class_id]
+                    current_conf = confidence
+                    tracking = tracker.initialize(frame, bbox, current_class, current_conf)
+                    print(f"Started tracking {current_class} with {TRACKER_TYPE} tracker")
             else:
                 # Update tracker
                 success, bbox = tracker.update(frame)
@@ -81,10 +85,12 @@ def main():
                 else:
                     print("Lost tracking, switching back to detection")
                     tracking = False
+                    current_class = None
+                    current_conf = None
             
             # Add FPS text to frame
             cv2.putText(frame, f"FPS: {fps:.2f}", (10, 30), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             
             # Display the frame
             cv2.imshow('Object Detection', frame)
@@ -95,6 +101,8 @@ def main():
                 break
             elif key == ord('r'):
                 tracking = False
+                current_class = None
+                current_conf = None
                 print("Reset tracking")
     
     except Exception as e:
