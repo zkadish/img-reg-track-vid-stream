@@ -16,14 +16,20 @@ BOUNDING_BOX_COLOR = (0, 255, 0)  # Green in BGR
 BOUNDING_BOX_THICKNESS = 1 # this doesn't look like it's being used
 
 # YOLO settings
-YOLO_MODEL_PATH = "models/yolov5s.pt"  # Path to YOLO model weights
+YOLO_MODEL_PATH = "models/yolov8n.pt"  # Path to YOLO model weights
 YOLO_CONFIDENCE_THRESHOLD = 0.5  # Minimum confidence for detections
 
 # Motion detection settings
 MOTION_DETECTION = {
+    "enabled": True,  # Enable/disable motion detection
     "min_area": 100,  # Minimum area for motion detection
     "history": 5,     # Number of frames to keep in history
-    "threshold": 25   # Threshold for motion detection
+    "threshold": 25,  # Threshold for motion detection
+    "visualization": {
+        "enabled": True,  # Show motion visualization
+        "color": (0, 0, 255),  # Red color for motion outlines
+        "thickness": 2  # Line thickness for motion outlines
+    }
 } 
 
 # Preprocessing settings

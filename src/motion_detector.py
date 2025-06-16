@@ -3,6 +3,7 @@ import numpy as np
 from dataclasses import dataclass
 from typing import Tuple, List, Optional
 import time
+from config.settings import MOTION_DETECTION
 
 @dataclass
 class MotionRegion:
@@ -104,17 +105,50 @@ class MotionDetector:
         distance = np.sqrt(dx*dx + dy*dy)
         return distance < threshold
     
-    def draw_motion(self, frame: np.ndarray, motion_regions: List[MotionRegion]) -> np.ndarray:
+    def draw_motion(self, frame: np.ndarray, motion_regions: List[MotionRegion], color=None, thickness=None) -> np.ndarray:
         """Draw motion regions on the frame with modern visualization"""
-        # Create a copy of the frame for drawing
-        vis_frame = frame.copy()
+        try:
+            # Use default values from settings if not provided
+            if color is None:
+                color = MOTION_DETECTION["visualization"]["color"]
+            if thickness is None:
+                thickness = MOTION_DETECTION["visualization"]["thickness"]
+            
+            # Create a copy of the frame for drawing
+            vis_frame = frame.copy()
+            
+            for region in motion_regions:
+                # Draw actual contour of motion with 1px red line
+                cv2.drawContours(vis_frame, [region.contour], -1, color, thickness)
+            
+            # Blend the visualization with the original frame
+            alpha = 0.7
+            cv2.addWeighted(vis_frame, alpha, frame, 1-alpha, 0, frame)
+            
+            return frame
+            
+        except Exception as e:
+            print(f"Error drawing motion: {str(e)}")
+            return frame
         
-        for region in motion_regions:
-            # Draw actual contour of motion with 1px red line
-            cv2.drawContours(vis_frame, [region.contour], -1, self.colors['contour'], 1)
-        
-        # Blend the visualization with the original frame
-        alpha = 0.7
-        cv2.addWeighted(vis_frame, alpha, frame, 1-alpha, 0, frame)
-        
-        return frame 
+    def draw_motion_history(self, frame: np.ndarray) -> np.ndarray:
+        """Draw motion history on the frame"""
+        try:
+            # Create a copy of the frame for drawing
+            vis_frame = frame.copy()
+            
+            # Draw motion history
+            for i, motion_mask in enumerate(self.motion_history):
+                contours, _ = cv2.findContours(motion_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                for contour in contours:
+                    cv2.drawContours(vis_frame, [contour], -1, (0, 0, 255), 1)
+            
+            # Blend the visualization with the original frame
+            alpha = 0.7
+            cv2.addWeighted(vis_frame, alpha, frame, 1-alpha, 0, frame)
+            
+            return frame
+            
+        except Exception as e:
+            print(f"Error drawing motion history: {str(e)}")
+            return frame 

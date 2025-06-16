@@ -8,7 +8,7 @@ from src.ui import TrackingUI
 from src.motion_detector import MotionDetector
 from utils.video_utils import get_video_source, read_frame
 from utils.preprocessing import preprocess_frame
-from config.settings import VIDEO_SOURCE, PREPROCESSING, TRACKER_TYPE
+from config.settings import VIDEO_SOURCE, PREPROCESSING, TRACKER_TYPE, MOTION_DETECTION
 
 def main():
     try:
@@ -18,8 +18,15 @@ def main():
         # Initialize components
         print("Initializing YOLO detector...")
         detector = ObjectImageRecognition(confidence=0.5)
-        print("Initializing motion detector...")
-        motion_detector = MotionDetector(min_area=100, history=5)
+        
+        # Initialize motion detector if enabled
+        motion_detector = None
+        if MOTION_DETECTION["enabled"]:
+            print("Initializing motion detector...")
+            motion_detector = MotionDetector(
+                min_area=MOTION_DETECTION["min_area"],
+                history=MOTION_DETECTION["history"]
+            )
         
         # Initialize UI
         ui = TrackingUI()
@@ -64,11 +71,19 @@ def main():
                 enhance_contrast=PREPROCESSING["enhance_contrast"]
             )
             
-            # Detect motion
-            has_motion, motion_regions = motion_detector.detect(processed_frame)
-            
-            # Draw motion visualization
-            frame = motion_detector.draw_motion(frame, motion_regions)
+            # Detect motion if enabled
+            has_motion = False
+            if MOTION_DETECTION["enabled"] and motion_detector:
+                has_motion, motion_regions = motion_detector.detect(processed_frame)
+                
+                # Draw motion visualization if enabled
+                if MOTION_DETECTION["visualization"]["enabled"]:
+                    frame = motion_detector.draw_motion(
+                        frame, 
+                        motion_regions,
+                        color=MOTION_DETECTION["visualization"]["color"],
+                        thickness=MOTION_DETECTION["visualization"]["thickness"]
+                    )
             
             # Perform object detection on the entire frame
             detections = detector.detect(processed_frame)
