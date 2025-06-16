@@ -15,6 +15,17 @@ SHOW_BOUNDING_BOX = True
 BOUNDING_BOX_COLOR = (0, 255, 0)  # Green in BGR
 BOUNDING_BOX_THICKNESS = 1 # this doesn't look like it's being used
 
+# YOLO settings
+YOLO_MODEL_PATH = "models/yolov5s.pt"  # Path to YOLO model weights
+YOLO_CONFIDENCE_THRESHOLD = 0.5  # Minimum confidence for detections
+
+# Motion detection settings
+MOTION_DETECTION = {
+    "min_area": 100,  # Minimum area for motion detection
+    "history": 5,     # Number of frames to keep in history
+    "threshold": 25   # Threshold for motion detection
+} 
+
 # Preprocessing settings
 # Turn off preprocessing for performance. Turning off preprocessing also improves class detection.
 PREPROCESSING = {
@@ -38,4 +49,4 @@ PREPROCESSING = {
         "brightness": 1.2,  # Increase brightness by 20%
         "contrast": 1.1  # Increase contrast by 10%
     }
-} 
+}

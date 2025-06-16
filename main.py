@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import time
 from pathlib import Path
-from src.detector import ObjectDetector
+from src.image_recognition import ObjectImageRecognition
 from src.tracker import ImageTracker
 from src.ui import TrackingUI
 from src.motion_detector import MotionDetector
@@ -17,7 +17,7 @@ def main():
         
         # Initialize components
         print("Initializing YOLO detector...")
-        detector = ObjectDetector(confidence=0.5)
+        detector = ObjectImageRecognition(confidence=0.5)
         print("Initializing motion detector...")
         motion_detector = MotionDetector(min_area=100, history=5)
         
