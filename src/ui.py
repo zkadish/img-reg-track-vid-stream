@@ -151,27 +151,46 @@ class TrackingUI:
             f"m - Motion Detection: {'ON' if self.motion_enabled else 'OFF'}"
         ]
         
+        # Calculate text dimensions
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.6
+        font_thickness = 1
+        line_spacing = 25
+        
+        # Find the longest text for width calculation
+        max_width = 0
+        for shortcut in shortcuts:
+            (width, height), _ = cv2.getTextSize(shortcut, font, font_scale, font_thickness)
+            max_width = max(max_width, width)
+        
+        # Calculate border dimensions with padding
+        padding = 20
+        border_width = max_width + padding * 2
+        border_height = len(shortcuts) * line_spacing + padding * 2
+        
         # Position for keyboard shortcuts (bottom left)
-        y_start = frame.shape[0] - (len(shortcuts) * 25 + 10)  # Adjust to align with bottom
+        y_start = frame.shape[0] - (border_height + 10)  # Adjust to align with bottom
         x_start = 10
         
-        # Add background for better visibility
+        # Draw border
         cv2.rectangle(frame, 
                      (x_start - 5, y_start - 5),
-                     (x_start + 200, y_start + len(shortcuts) * 25 + 5),
-                     (0, 0, 0),
-                     -1)
+                     (x_start + border_width, y_start + border_height),  # Adjust bottom to match content
+                     (255, 255, 255),  # White border
+                     1)  # Border thickness
         
-        # Add each shortcut
+        # Add each shortcut with left-justified text
         for i, shortcut in enumerate(shortcuts):
-            y = y_start + i * 25
+            y = y_start + padding + i * line_spacing
+            # Calculate text position to left-justify it
+            x = x_start + padding
             cv2.putText(frame,
                        shortcut,
-                       (x_start, y),
-                       cv2.FONT_HERSHEY_SIMPLEX,
-                       0.6,
+                       (x, y),
+                       font,
+                       font_scale,
                        (255, 255, 255),
-                       1)
+                       font_thickness)
 
     def cleanup(self):
         """Clean up UI resources"""
