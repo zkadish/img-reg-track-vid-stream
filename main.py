@@ -244,7 +244,7 @@ def main():
                 "last_detection": last_detection,
                 "consecutive_detections": consecutive_detections,
                 "tracking_enabled": TRACKING["enabled"],
-                "detection_enabled": IMAGE_RECOGNITION["enabled"]  # Add detection status
+                "recognition_enabled": IMAGE_RECOGNITION["enabled"]  # Add recognition status
             }
             
             # Update display
@@ -311,16 +311,16 @@ def main():
                     tracked_object = None
                     tracked_confidence = 0
             elif key == ord('d'):
-                # Toggle detection
+                # Toggle recognition
                 IMAGE_RECOGNITION["enabled"] = not IMAGE_RECOGNITION["enabled"]
                 if IMAGE_RECOGNITION["enabled"]:
-                    print("Detection enabled")
+                    print("Recognition enabled")
                     if detector is None:
                         print("Initializing YOLO detector...")
                         detector = ObjectImageRecognition(confidence=IMAGE_RECOGNITION["confidence_threshold"])
                 else:
-                    print("Detection disabled")
-                    # Reset tracking if detection is disabled
+                    print("Recognition disabled")
+                    # Reset tracking if recognition is disabled
                     is_tracking = False
                     tracked_bbox = None
                     tracked_object = None
