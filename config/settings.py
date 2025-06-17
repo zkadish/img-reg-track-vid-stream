@@ -16,8 +16,10 @@ BOUNDING_BOX_COLOR = (0, 255, 0)  # Green in BGR
 BOUNDING_BOX_THICKNESS = 1 # this doesn't look like it's being used
 
 # YOLO settings
-YOLO_MODEL_PATH = "models/yolov8n.pt"  # Path to YOLO model weights
-YOLO_CONFIDENCE_THRESHOLD = 0.5  # Minimum confidence for detections
+YOLO = {
+    "model_path": "models/yolov8n.pt",  # Path to YOLO model weights
+    "confidence_threshold": 0.5  # Minimum confidence for detections
+}
 
 # Motion detection settings
 MOTION_DETECTION = {
@@ -31,6 +33,20 @@ MOTION_DETECTION = {
         "thickness": 2  # Line thickness for motion outlines
     }
 } 
+
+# Image recognition settings
+IMAGE_RECOGNITION = {
+    "enabled": True,  # Enable/disable image recognition
+    "confidence_threshold": 0.5,  # Minimum confidence for detections
+    "visualization": {
+        "enabled": True,  # Show detection visualization
+        "box_color": (0, 255, 0),  # Green color for detection boxes
+        "text_color": (0, 255, 0),  # Green color for text
+        "box_thickness": 2,  # Line thickness for detection boxes
+        "text_scale": 0.9,  # Text size
+        "text_thickness": 2  # Text thickness
+    }
+}
 
 # Preprocessing settings
 # Turn off preprocessing for performance. Turning off preprocessing also improves class detection.

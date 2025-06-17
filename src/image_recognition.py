@@ -1,18 +1,18 @@
 import cv2
 import numpy as np
 from pathlib import Path
-from ultralytics import YOLO
-from config.settings import YOLO_MODEL_PATH, YOLO_CONFIDENCE_THRESHOLD
+from ultralytics import YOLO as YOLOModel
+from config.settings import YOLO as YOLO_CONFIG
 
 class ObjectImageRecognition:
-    def __init__(self, confidence=YOLO_CONFIDENCE_THRESHOLD):
-        """Initialize the YOLO object recognition model.
+    def __init__(self, confidence=0.5):
+        """Initialize YOLO model.
         
         Args:
-            confidence (float): Confidence threshold for detections
+            confidence (float): Minimum confidence for detections
         """
+        self.model = YOLOModel(YOLO_CONFIG["model_path"])
         self.confidence = confidence
-        self.model = self._load_model()
         self.class_names = self.model.names
         
     def _load_model(self):
@@ -22,14 +22,14 @@ class ObjectImageRecognition:
             Path('models').mkdir(exist_ok=True)
             
             # Download model if it doesn't exist
-            if not Path(YOLO_MODEL_PATH).exists():
+            if not Path(YOLO_CONFIG["model_path"]).exists():
                 print("Downloading YOLO model...")
-                model = YOLO('yolov8n.pt')  # Download and load the model
-                model.save(YOLO_MODEL_PATH)  # Save it to our models directory
+                model = YOLOModel('yolov8n.pt')  # Download and load the model
+                model.save(YOLO_CONFIG["model_path"])  # Save it to our models directory
                 print("Model downloaded successfully")
             else:
                 print("Loading existing YOLO model...")
-                model = YOLO(YOLO_MODEL_PATH)
+                model = YOLOModel(YOLO_CONFIG["model_path"])
             
             print("Model loaded successfully")
             return model
@@ -39,53 +39,65 @@ class ObjectImageRecognition:
             raise
             
     def detect(self, frame):
-        """Perform object detection on a frame.
+        """Detect objects in frame.
         
         Args:
             frame (numpy.ndarray): Input frame
             
         Returns:
-            list: List of detections as (bbox, confidence, class_id) tuples
+            list: List of (bbox, confidence, class_id) tuples
         """
         try:
-            # Perform detection
+            # Run YOLO detection
             results = self.model(frame, conf=self.confidence)[0]
             
-            # Process results
+            # Extract detections
             detections = []
             for r in results.boxes.data.tolist():
-                x1, y1, x2, y2, confidence, class_id = r
-                bbox = (int(x1), int(y1), int(x2 - x1), int(y2 - y1))
-                detections.append((bbox, confidence, int(class_id)))
-                    
+                x1, y1, x2, y2, conf, class_id = r
+                bbox = [x1, y1, x2 - x1, y2 - y1]  # Convert to [x, y, w, h]
+                detections.append((bbox, conf, int(class_id)))
+            
             return detections
             
         except Exception as e:
-            print(f"Error during detection: {str(e)}")
+            print(f"Error detecting objects: {str(e)}")
             return []
             
-    def draw_detections(self, frame, detections):
-        """Draw detection boxes and labels on frame.
+    def draw_detections(self, frame, detections, box_color=(0, 255, 0), text_color=(0, 255, 0), 
+                       box_thickness=2, text_scale=0.9, text_thickness=2):
+        """Draw detections on frame.
         
         Args:
             frame (numpy.ndarray): Input frame
-            detections (list): List of detections from detect()
+            detections (list): List of (bbox, confidence, class_id) tuples
+            box_color (tuple): BGR color for detection boxes
+            text_color (tuple): BGR color for text
+            box_thickness (int): Line thickness for detection boxes
+            text_scale (float): Text size
+            text_thickness (int): Text thickness
             
         Returns:
             numpy.ndarray: Frame with detections drawn
         """
         try:
             for bbox, conf, class_id in detections:
-                x, y, w, h = bbox
-                
                 # Draw bounding box
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                x, y, w, h = [int(v) for v in bbox]
+                cv2.rectangle(frame, (x, y), (x + w, y + h), box_color, box_thickness)
                 
                 # Draw label
                 label = f"{self.class_names[class_id]}: {conf:.2f}"
-                cv2.putText(frame, label, (x, y - 10),
-                          cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-                          
+                cv2.putText(
+                    frame, 
+                    label, 
+                    (x, y - 10), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 
+                    text_scale,
+                    text_color,
+                    text_thickness
+                )
+            
             return frame
             
         except Exception as e:
