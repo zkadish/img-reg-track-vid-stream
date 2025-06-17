@@ -10,6 +10,7 @@ class TrackingUI:
         self.is_selecting = False
         self.selected_roi = None
         self.info_text = []
+        self.tracking_enabled = False
         
         # Create window and set mouse callback
         cv2.namedWindow(window_name)
@@ -102,6 +103,10 @@ class TrackingUI:
         """
         display_frame = frame.copy()
         
+        # Update tracking status
+        if tracking_info and "tracking_enabled" in tracking_info:
+            self.tracking_enabled = tracking_info["tracking_enabled"]
+        
         # Update info text based on tracking status
         self.info_text = [
             f"Tracker: {tracking_info.get('tracker_type', 'N/A')}",
@@ -117,11 +122,44 @@ class TrackingUI:
         # Draw info text
         self._draw_info_text(display_frame)
         
+        # Add keyboard shortcuts overlay
+        self._add_keyboard_shortcuts(display_frame)
+        
         # Show frame
         cv2.imshow(self.window_name, display_frame)
         
         # Return key press
         return cv2.waitKey(1) & 0xFF
+
+    def _add_keyboard_shortcuts(self, frame):
+        """Add keyboard shortcuts to the frame"""
+        shortcuts = [
+            "q - Quit",
+            "r - Reset",
+            f"t - Tracking: {'ON' if self.tracking_enabled else 'OFF'}"
+        ]
+        
+        # Position for keyboard shortcuts (bottom left)
+        y_start = frame.shape[0] - 100
+        x_start = 10
+        
+        # Add background for better visibility
+        cv2.rectangle(frame, 
+                     (x_start - 5, y_start - 5),
+                     (x_start + 200, y_start + len(shortcuts) * 25 + 5),
+                     (0, 0, 0),
+                     -1)
+        
+        # Add each shortcut
+        for i, shortcut in enumerate(shortcuts):
+            y = y_start + i * 25
+            cv2.putText(frame,
+                       shortcut,
+                       (x_start, y),
+                       cv2.FONT_HERSHEY_SIMPLEX,
+                       0.6,
+                       (255, 255, 255),
+                       1)
 
     def cleanup(self):
         """Clean up UI resources"""

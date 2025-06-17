@@ -234,16 +234,19 @@ def main():
                             text_thickness=IMAGE_RECOGNITION["visualization"]["text_thickness"]
                         )
             
-            # Update UI with tracking information
+            # Update tracking info
             tracking_info = {
-                'tracking': is_tracking and TRACKING["enabled"],
-                'detection': IMAGE_RECOGNITION["enabled"],
-                'fps': fps,
-                'motion_detected': has_motion,
-                'detected_object': tracked_object,
-                'detection_confidence': tracked_confidence
+                "is_tracking": is_tracking,
+                "tracked_bbox": tracked_bbox,
+                "tracked_object": tracked_object,
+                "tracked_confidence": tracked_confidence,
+                "detection_start_time": detection_start_time,
+                "last_detection": last_detection,
+                "consecutive_detections": consecutive_detections,
+                "tracking_enabled": TRACKING["enabled"]  # Add tracking status
             }
             
+            # Update display
             key = ui.update_display(frame, tracking_info)
             
             # Handle key presses
