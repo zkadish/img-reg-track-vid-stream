@@ -262,31 +262,48 @@ def main():
             if key == ord('q'):
                 break
             elif key == ord('r'):
+                print("Resetting...")
                 # Reset tracking state
                 is_tracking = False
                 tracked_bbox = None
                 tracked_object = None
                 tracked_confidence = 0
+                # Reset stability check
                 detection_start_time = None
                 last_detection = None
                 consecutive_detections = 0
-                
-                # Only restart tracking logic if tracking is enabled
-                if TRACKING["enabled"]:
-                    print("Reinitializing components...")
-                    
-                    # Reinitialize detector
-                    if detector is None:
-                        print("Initializing YOLO detector...")
-                        detector = ObjectImageRecognition(confidence=IMAGE_RECOGNITION["confidence_threshold"])
-                    
-                    # Reinitialize tracker
-                    print("Initializing tracker...")
-                    tracker = ImageTracker(tracker_type=TRACKER_TYPE)
-                    
-                    print("Reset complete: Starting fresh detection and tracking")
-                else:
-                    print("Reset complete: Starting fresh detection")
+                # Reset motion detection state
+                has_motion = False
+                motion_bbox = None
+                # Reset FPS calculation
+                frame_count = 0
+                start_time = time.time()
+                fps = 0
+                # Reset tracking info
+                tracking_info = {
+                    "tracked_object": None,
+                    "tracked_confidence": 0,
+                    "tracked_bbox": None,
+                    "is_tracking": False,
+                    "detection_start_time": None,
+                    "last_detection": None,
+                    "consecutive_detections": 0,
+                    "tracking_enabled": TRACKING["enabled"],
+                    "recognition_enabled": IMAGE_RECOGNITION["enabled"]
+                }
+                # Reset motion detector
+                if motion_detector is not None:
+                    motion_detector.reset()
+                # Reset tracker
+                if tracker is not None:
+                    tracker = ImageTracker()
+                # Enable recognition
+                IMAGE_RECOGNITION["enabled"] = True
+                print("Recognition enabled")
+                # Initialize detector if needed
+                if detector is None:
+                    print("Initializing YOLO detector...")
+                    detector = ObjectImageRecognition(confidence=IMAGE_RECOGNITION["confidence_threshold"])
             elif key == ord('t'):
                 # Toggle tracking
                 TRACKING["enabled"] = not TRACKING["enabled"]
@@ -298,14 +315,6 @@ def main():
                     tracked_bbox = None
                     tracked_object = None
                     tracked_confidence = 0
-                    detection_start_time = None
-                    last_detection = None
-                    consecutive_detections = 0
-                    
-                    # Reinitialize detector
-                    if detector is None:
-                        print("Initializing YOLO detector...")
-                        detector = ObjectImageRecognition(confidence=IMAGE_RECOGNITION["confidence_threshold"])
                     
                     # Reinitialize tracker
                     print("Initializing tracker...")
