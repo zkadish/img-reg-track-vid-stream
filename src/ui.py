@@ -146,9 +146,9 @@ class TrackingUI:
         shortcuts = [
             "q - Quit",
             "r - Reset",
-            f"t - Tracking: {'ON' if self.tracking_enabled else 'OFF'}",
-            f"i - Recognition: {'ON' if self.recognition_enabled else 'OFF'}",
-            f"m - Motion: {'ON' if self.motion_enabled else 'OFF'}"
+            f"i - Image Recognition: {'ON' if self.recognition_enabled else 'OFF'}",
+            f"t - Image Tracking: {'ON' if self.tracking_enabled else 'OFF'}",
+            f"m - Motion Detection: {'ON' if self.motion_enabled else 'OFF'}"
         ]
         
         # Position for keyboard shortcuts (bottom left)
