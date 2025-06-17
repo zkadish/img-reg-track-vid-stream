@@ -291,11 +291,16 @@ def main():
                     "last_detection": None,
                     "consecutive_detections": 0,
                     "tracking_enabled": TRACKING["enabled"],
-                    "recognition_enabled": IMAGE_RECOGNITION["enabled"]
+                    "recognition_enabled": IMAGE_RECOGNITION["enabled"],
+                    "motion_enabled": MOTION_DETECTION["enabled"]
                 }
                 # Reset motion detector
                 if motion_detector is not None:
-                    motion_detector.reset()
+                    print("Reinitializing motion detector...")
+                    motion_detector = MotionDetector(
+                        min_area=MOTION_DETECTION["min_area"],
+                        var_threshold=MOTION_DETECTION["threshold"]
+                    )
                 # Reset tracker
                 if tracker is not None:
                     tracker = ImageTracker()
@@ -364,7 +369,11 @@ def main():
                     }
                     # Reset motion detector
                     if motion_detector is not None:
-                        motion_detector.reset()
+                        print("Reinitializing motion detector...")
+                        motion_detector = MotionDetector(
+                            min_area=MOTION_DETECTION["min_area"],
+                            var_threshold=MOTION_DETECTION["threshold"]
+                        )
                     # Reset tracker
                     if tracker is not None:
                         tracker = ImageTracker()
@@ -391,6 +400,9 @@ def main():
                             min_area=MOTION_DETECTION["min_area"],
                             var_threshold=MOTION_DETECTION["threshold"]
                         )
+                    # Reset motion detection state
+                    has_motion = False
+                    motion_bbox = None
                 else:
                     print("Motion detection disabled")
                     # Reset motion detection state
