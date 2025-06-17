@@ -254,7 +254,12 @@ def main():
                 "consecutive_detections": consecutive_detections,
                 "tracking_enabled": TRACKING["enabled"],
                 "recognition_enabled": IMAGE_RECOGNITION["enabled"],
-                "motion_enabled": MOTION_DETECTION["enabled"]  # Add motion status
+                "motion_enabled": MOTION_DETECTION["enabled"],
+                "tracker_type": TRACKER_TYPE,
+                "tracking": is_tracking,
+                "object_class": tracked_object,
+                "confidence": tracked_confidence,
+                "fps": fps
             }
             
             # Update display
