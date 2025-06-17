@@ -45,7 +45,7 @@ def main():
         print("Press 'q' to quit")
         print("Press 'r' to reset and start detection again")
         print("Press 't' to toggle tracking on/off")
-        print("Press 'd' to toggle detection on/off")
+        print("Press 'i' to toggle recognition on/off")
         
         # FPS calculation variables
         frame_count = 0
@@ -310,7 +310,7 @@ def main():
                     tracked_bbox = None
                     tracked_object = None
                     tracked_confidence = 0
-            elif key == ord('d'):
+            elif key == ord('i'):
                 # Toggle recognition
                 IMAGE_RECOGNITION["enabled"] = not IMAGE_RECOGNITION["enabled"]
                 if IMAGE_RECOGNITION["enabled"]:

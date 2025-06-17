@@ -142,7 +142,7 @@ class TrackingUI:
             "q - Quit",
             "r - Reset",
             f"t - Tracking: {'ON' if self.tracking_enabled else 'OFF'}",
-            f"d - Recognition: {'ON' if self.recognition_enabled else 'OFF'}"
+            f"i - Recognition: {'ON' if self.recognition_enabled else 'OFF'}"
         ]
         
         # Position for keyboard shortcuts (bottom left)
