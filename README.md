@@ -43,6 +43,7 @@ python main.py
 
 - Press 'q' to quit the application
 - Press 'r' to reset tracking (useful when tracking is lost or you want to track a different object)
+- Press 't' to toggle tracking on/off
 
 ### Display Information
 

@@ -21,7 +21,7 @@ YOLO_CONFIDENCE_THRESHOLD = 0.5  # Minimum confidence for detections
 
 # Motion detection settings
 MOTION_DETECTION = {
-    "enabled": True,  # Enable/disable motion detection
+    "enabled": False,  # Enable/disable motion detection
     "min_area": 100,  # Minimum area for motion detection
     "history": 5,     # Number of frames to keep in history
     "threshold": 25,  # Threshold for motion detection
@@ -54,5 +54,20 @@ PREPROCESSING = {
         "enabled": False,  # Enable brightness/contrast adjustment
         "brightness": 1.2,  # Increase brightness by 20%
         "contrast": 1.1  # Increase contrast by 10%
+    }
+}
+
+# Tracker settings
+TRACKING = {
+    "enabled": True,  # Enable/disable image tracking
+    "auto_track": True,  # Automatically start tracking when object detected
+    "confidence_threshold": 0.5,  # Minimum confidence to start tracking
+    "visualization": {
+        "enabled": True,  # Show tracking visualization
+        "box_color": (255, 0, 0),  # Blue color for tracking box
+        "text_color": (255, 0, 0),  # Blue color for text
+        "box_thickness": 2,  # Line thickness for tracking box
+        "text_scale": 0.9,  # Text size
+        "text_thickness": 2  # Text thickness
     }
 }
