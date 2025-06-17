@@ -279,10 +279,27 @@ def main():
                 # Toggle tracking
                 TRACKING["enabled"] = not TRACKING["enabled"]
                 if TRACKING["enabled"]:
-                    print("Tracking enabled")
-                    if tracker is None:
-                        print("Initializing tracker...")
-                        tracker = ImageTracker(tracker_type=TRACKER_TYPE)
+                    print("Reinitializing components...")
+                    
+                    # Reset tracking state
+                    is_tracking = False
+                    tracked_bbox = None
+                    tracked_object = None
+                    tracked_confidence = 0
+                    detection_start_time = None
+                    last_detection = None
+                    consecutive_detections = 0
+                    
+                    # Reinitialize detector
+                    if detector is None:
+                        print("Initializing YOLO detector...")
+                        detector = ObjectImageRecognition(confidence=IMAGE_RECOGNITION["confidence_threshold"])
+                    
+                    # Reinitialize tracker
+                    print("Initializing tracker...")
+                    tracker = ImageTracker(tracker_type=TRACKER_TYPE)
+                    
+                    print("Tracking enabled: Starting fresh detection and tracking")
                 else:
                     print("Tracking disabled")
                     is_tracking = False
