@@ -152,7 +152,7 @@ class TrackingUI:
         ]
         
         # Position for keyboard shortcuts (bottom left)
-        y_start = frame.shape[0] - 100
+        y_start = frame.shape[0] - (len(shortcuts) * 25 + 10)  # Adjust to align with bottom
         x_start = 10
         
         # Add background for better visibility
