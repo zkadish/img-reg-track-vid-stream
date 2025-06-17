@@ -166,22 +166,22 @@ class TrackingUI:
         # Calculate border dimensions with padding
         padding = 20
         border_width = max_width + padding * 2
-        border_height = len(shortcuts) * line_spacing + padding * 2
+        border_height = (len(shortcuts) - 1) * line_spacing + padding * 2
         
         # Position for keyboard shortcuts (bottom left)
-        y_start = frame.shape[0] - (border_height + 10)  # Adjust to align with bottom
-        x_start = 10
+        y_start = frame.shape[0] - border_height - 10  # 10 pixels from bottom
+        x_start = 10  # 10 pixels from left
         
         # Draw border
         cv2.rectangle(frame, 
-                     (x_start - 5, y_start - 5),
-                     (x_start + border_width, y_start + border_height),  # Adjust bottom to match content
+                     (x_start, y_start),
+                     (x_start + border_width, y_start + border_height),
                      (255, 255, 255),  # White border
                      1)  # Border thickness
         
         # Add each shortcut with left-justified text
         for i, shortcut in enumerate(shortcuts):
-            y = y_start + padding + i * line_spacing
+            y = y_start + padding + i * line_spacing + 5
             # Calculate text position to left-justify it
             x = x_start + padding
             cv2.putText(frame,
