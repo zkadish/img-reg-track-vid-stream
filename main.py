@@ -46,6 +46,7 @@ def main():
         print("Press 'r' to reset and start detection again")
         print("Press 't' to toggle tracking on/off")
         print("Press 'i' to toggle recognition on/off")
+        print("Press 'm' to toggle motion detection on/off")
         
         # FPS calculation variables
         frame_count = 0
@@ -244,7 +245,8 @@ def main():
                 "last_detection": last_detection,
                 "consecutive_detections": consecutive_detections,
                 "tracking_enabled": TRACKING["enabled"],
-                "recognition_enabled": IMAGE_RECOGNITION["enabled"]  # Add recognition status
+                "recognition_enabled": IMAGE_RECOGNITION["enabled"],
+                "motion_enabled": MOTION_DETECTION["enabled"]  # Add motion status
             }
             
             # Update display
@@ -325,6 +327,23 @@ def main():
                     tracked_bbox = None
                     tracked_object = None
                     tracked_confidence = 0
+            elif key == ord('m'):
+                # Toggle motion detection
+                MOTION_DETECTION["enabled"] = not MOTION_DETECTION["enabled"]
+                if MOTION_DETECTION["enabled"]:
+                    print("Motion detection enabled")
+                    # Initialize motion detector if needed
+                    if motion_detector is None:
+                        print("Initializing motion detector...")
+                        motion_detector = MotionDetector(
+                            min_area=MOTION_DETECTION["min_area"],
+                            var_threshold=MOTION_DETECTION["threshold"]
+                        )
+                else:
+                    print("Motion detection disabled")
+                    # Reset motion detection state
+                    has_motion = False
+                    motion_bbox = None
     
     except Exception as e:
         print(f"Error: {str(e)}")

@@ -12,6 +12,7 @@ class TrackingUI:
         self.info_text = []
         self.tracking_enabled = False
         self.recognition_enabled = False
+        self.motion_enabled = False
         
         # Create window and set mouse callback
         cv2.namedWindow(window_name)
@@ -112,6 +113,10 @@ class TrackingUI:
         if tracking_info and "recognition_enabled" in tracking_info:
             self.recognition_enabled = tracking_info["recognition_enabled"]
         
+        # Update motion status
+        if tracking_info and "motion_enabled" in tracking_info:
+            self.motion_enabled = tracking_info["motion_enabled"]
+        
         # Update info text based on tracking status
         self.info_text = [
             f"Tracker: {tracking_info.get('tracker_type', 'N/A')}",
@@ -142,7 +147,8 @@ class TrackingUI:
             "q - Quit",
             "r - Reset",
             f"t - Tracking: {'ON' if self.tracking_enabled else 'OFF'}",
-            f"i - Recognition: {'ON' if self.recognition_enabled else 'OFF'}"
+            f"i - Recognition: {'ON' if self.recognition_enabled else 'OFF'}",
+            f"m - Motion: {'ON' if self.motion_enabled else 'OFF'}"
         ]
         
         # Position for keyboard shortcuts (bottom left)
