@@ -78,6 +78,12 @@ TRACKING = {
     "enabled": True,  # Enable/disable image tracking
     "auto_track": True,  # Automatically start tracking when object detected
     "confidence_threshold": 0.5,  # Minimum confidence to start tracking
+    "stability": {
+        "enabled": True,  # Enable stability check before tracking
+        "delay_seconds": 3,  # Seconds to wait before starting tracking
+        "min_detections": 3,  # Minimum number of consecutive detections
+        "same_class": True  # Require same object class for all detections
+    },
     "visualization": {
         "enabled": True,  # Show tracking visualization
         "box_color": (255, 0, 0),  # Blue color for tracking box

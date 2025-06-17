@@ -58,6 +58,11 @@ def main():
         tracked_object = None
         tracked_confidence = 0
         
+        # Detection stability state
+        detection_start_time = None
+        last_detection = None
+        consecutive_detections = 0
+        
         # Wait for first frame
         ret, frame = read_frame(cap)
         if not ret:
@@ -112,18 +117,51 @@ def main():
                         detections = detector.detect(processed_frame)
                         
                         # Check for high confidence detections if auto-track is enabled
-                        if TRACKING["auto_track"]:
+                        if TRACKING["auto_track"] and TRACKING["stability"]["enabled"]:
+                            current_time = time.time()
+                            
+                            # Find best detection
+                            best_detection = None
                             for bbox, conf, class_id in detections:
                                 if conf >= TRACKING["confidence_threshold"]:
+                                    best_detection = (bbox, conf, class_id)
+                                    break
+                            
+                            if best_detection:
+                                bbox, conf, class_id = best_detection
+                                current_object = detector.class_names[class_id]
+                                
+                                # Check if this is a new detection or continuation
+                                if (last_detection is None or 
+                                    (TRACKING["stability"]["same_class"] and 
+                                     current_object != last_detection[2])):
+                                    # Reset stability check for new detection
+                                    detection_start_time = current_time
+                                    consecutive_detections = 1
+                                    last_detection = (bbox, conf, current_object)
+                                else:
+                                    # Update consecutive detections
+                                    consecutive_detections += 1
+                                    last_detection = (bbox, conf, current_object)
+                                
+                                # Check if stability conditions are met
+                                time_elapsed = current_time - detection_start_time
+                                if (time_elapsed >= TRACKING["stability"]["delay_seconds"] and 
+                                    consecutive_detections >= TRACKING["stability"]["min_detections"]):
                                     # Start tracking
                                     is_tracking = True
                                     tracked_bbox = bbox
-                                    tracked_object = detector.class_names[class_id]
+                                    tracked_object = current_object
                                     tracked_confidence = conf
                                     print(f"Detected {tracked_object} with confidence {conf:.2f}")
+                                    print(f"Stable detection for {time_elapsed:.1f} seconds")
                                     print("Starting tracking...")
                                     tracker.initialize(frame, tracked_bbox)
-                                    break
+                            else:
+                                # Reset stability check if no good detection
+                                detection_start_time = None
+                                last_detection = None
+                                consecutive_detections = 0
                         
                         # Draw detections on frame if visualization is enabled
                         if IMAGE_RECOGNITION["visualization"]["enabled"]:
@@ -136,6 +174,20 @@ def main():
                                 text_scale=IMAGE_RECOGNITION["visualization"]["text_scale"],
                                 text_thickness=IMAGE_RECOGNITION["visualization"]["text_thickness"]
                             )
+                            
+                            # Draw stability status if checking stability
+                            if TRACKING["stability"]["enabled"] and detection_start_time is not None:
+                                time_elapsed = time.time() - detection_start_time
+                                status = f"Stability: {time_elapsed:.1f}s, {consecutive_detections} detections"
+                                cv2.putText(
+                                    frame,
+                                    status,
+                                    (10, 30),
+                                    cv2.FONT_HERSHEY_SIMPLEX,
+                                    0.7,
+                                    (0, 255, 255),
+                                    2
+                                )
                     else:
                         # Update tracker
                         success, bbox = tracker.update(frame)
@@ -203,6 +255,9 @@ def main():
                 tracked_bbox = None
                 tracked_object = None
                 tracked_confidence = 0
+                detection_start_time = None
+                last_detection = None
+                consecutive_detections = 0
                 print("Reset: Starting detection again")
             elif key == ord('t'):
                 # Toggle tracking
