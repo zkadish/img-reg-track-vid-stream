@@ -153,25 +153,30 @@ class TrackingUI:
         if tracking_info and "motion_enabled" in tracking_info:
             self.motion_enabled = tracking_info["motion_enabled"]
         
+        # Calculate stability time
+        stability_time = 0.0
+        if tracking_info.get('detection_start_time') is not None:
+            stability_time = time.time() - tracking_info['detection_start_time']
+        
         # Update info text based on tracking status
         self.info_text = [
+            "=== System Status ===",
+            f"FPS: {tracking_info.get('fps', 0):.1f}",
+            f"Recognition: {'ON' if self.recognition_enabled else 'OFF'}",
+            f"Tracking: {'ON' if self.tracking_enabled else 'OFF'}",
+            f"Motion: {'ON' if self.motion_enabled else 'OFF'}",
+            "",
+            "=== Recognition Stats ===",
+            f"Status: {'Detecting' if not tracking_info.get('tracking', False) else 'Tracking'}",
+            f"Object: {tracking_info.get('object_class', 'None')}",
+            f"Confidence: {tracking_info.get('confidence', 0):.2f}",
+            f"Stability: {stability_time:.1f}s",
+            f"Detections: {tracking_info.get('consecutive_detections', 0)}",
+            "",
+            "=== Tracking Stats ===",
             f"Tracker: {tracking_info.get('tracker_type', 'N/A')}",
-            f"Status: {'Tracking' if tracking_info.get('tracking', False) else 'Detecting'}",
-            f"FPS: {tracking_info.get('fps', 0):.1f}"
+            f"Status: {'Active' if tracking_info.get('tracking', False) else 'Inactive'}"
         ]
-        
-        # Add object info if available
-        if tracking_info.get('object_class'):
-            self.info_text.append(f"Object: {tracking_info['object_class']}")
-        if tracking_info.get('confidence'):
-            self.info_text.append(f"Confidence: {tracking_info['confidence']:.2f}")
-            
-        # Add stability info during recognition
-        if self.recognition_enabled and tracking_info.get('detection_start_time'):
-            time_elapsed = time.time() - tracking_info['detection_start_time']
-            detections = tracking_info.get('consecutive_detections', 0)
-            self.info_text.append(f"Stability: {time_elapsed:.1f}s")
-            self.info_text.append(f"Detections: {detections}")
         
         # Draw info text
         self._draw_info_text(display_frame)

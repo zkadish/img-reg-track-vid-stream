@@ -181,20 +181,6 @@ def main():
                             text_scale=IMAGE_RECOGNITION["visualization"]["text_scale"],
                             text_thickness=IMAGE_RECOGNITION["visualization"]["text_thickness"]
                         )
-                        
-                        # Draw stability status if checking stability
-                        if TRACKING["stability"]["enabled"] and detection_start_time is not None:
-                            time_elapsed = time.time() - detection_start_time
-                            status = f"Stability: {time_elapsed:.1f}s, {consecutive_detections} detections"
-                            cv2.putText(
-                                frame,
-                                status,
-                                (10, 30),
-                                cv2.FONT_HERSHEY_SIMPLEX,
-                                0.7,
-                                (0, 255, 255),
-                                2
-                            )
                 else:
                     # Just perform detection without tracking
                     detections = detector.detect(processed_frame)
