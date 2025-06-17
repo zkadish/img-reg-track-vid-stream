@@ -315,6 +315,41 @@ def main():
                 IMAGE_RECOGNITION["enabled"] = not IMAGE_RECOGNITION["enabled"]
                 if IMAGE_RECOGNITION["enabled"]:
                     print("Recognition enabled")
+                    # Reset tracking state
+                    is_tracking = False
+                    tracked_bbox = None
+                    tracked_object = None
+                    tracked_confidence = 0
+                    # Reset stability check
+                    detection_start_time = None
+                    last_detection = None
+                    consecutive_detections = 0
+                    # Reset motion detection state
+                    has_motion = False
+                    motion_bbox = None
+                    # Reset FPS calculation
+                    frame_count = 0
+                    start_time = time.time()
+                    fps = 0
+                    # Reset tracking info
+                    tracking_info = {
+                        "tracked_object": None,
+                        "tracked_confidence": 0,
+                        "tracked_bbox": None,
+                        "is_tracking": False,
+                        "detection_start_time": None,
+                        "last_detection": None,
+                        "consecutive_detections": 0,
+                        "tracking_enabled": TRACKING["enabled"],
+                        "recognition_enabled": IMAGE_RECOGNITION["enabled"]
+                    }
+                    # Reset motion detector
+                    if motion_detector is not None:
+                        motion_detector.reset()
+                    # Reset tracker
+                    if tracker is not None:
+                        tracker = ImageTracker()
+                    # Initialize detector if needed
                     if detector is None:
                         print("Initializing YOLO detector...")
                         detector = ObjectImageRecognition(confidence=IMAGE_RECOGNITION["confidence_threshold"])
