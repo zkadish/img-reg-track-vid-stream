@@ -86,13 +86,48 @@ class TrackingUI:
                 return self.selected_roi
 
     def _draw_info_text(self, frame: np.ndarray):
-        """Draw information text on the frame"""
-        y_offset = 30
+        """Draw info text on the frame"""
+        if not self.info_text:
+            return
+            
+        # Calculate text dimensions
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.6
+        font_thickness = 1
+        line_spacing = 25
+        
+        # Find the longest text for width calculation
+        max_width = 0
         for text in self.info_text:
-            cv2.putText(frame, text, (10, y_offset),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.6,
-                       self.colors['text'], 2)
-            y_offset += 25
+            (width, height), _ = cv2.getTextSize(text, font, font_scale, font_thickness)
+            max_width = max(max_width, width)
+        
+        # Calculate border dimensions with padding
+        padding = 20
+        border_width = max_width + padding * 2
+        border_height = len(self.info_text) * line_spacing + padding * 2
+        
+        # Position for info text (top right)
+        y_start = 10
+        x_start = frame.shape[1] - border_width - 10  # 10 pixels from right edge
+        
+        # Draw border
+        cv2.rectangle(frame, 
+                     (x_start, y_start),
+                     (x_start + border_width, y_start + border_height),
+                     (255, 255, 255),  # White border
+                     1)  # Border thickness
+        
+        # Add each line of text
+        for i, text in enumerate(self.info_text):
+            y = y_start + padding + i * line_spacing
+            cv2.putText(frame,
+                       text,
+                       (x_start + padding, y),
+                       font,
+                       font_scale,
+                       (255, 255, 255),
+                       font_thickness)
 
     def update_display(self, frame: np.ndarray, tracking_info: dict):
         """
