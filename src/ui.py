@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from typing import Tuple, Optional, List
+import time
 
 class TrackingUI:
     def __init__(self, window_name: str = "Object Tracking"):
@@ -124,10 +125,18 @@ class TrackingUI:
             f"FPS: {tracking_info.get('fps', 0):.1f}"
         ]
         
+        # Add object info if available
         if tracking_info.get('object_class'):
             self.info_text.append(f"Object: {tracking_info['object_class']}")
         if tracking_info.get('confidence'):
             self.info_text.append(f"Confidence: {tracking_info['confidence']:.2f}")
+            
+        # Add stability info during recognition
+        if self.recognition_enabled and tracking_info.get('detection_start_time'):
+            time_elapsed = time.time() - tracking_info['detection_start_time']
+            detections = tracking_info.get('consecutive_detections', 0)
+            self.info_text.append(f"Stability: {time_elapsed:.1f}s")
+            self.info_text.append(f"Detections: {detections}")
         
         # Draw info text
         self._draw_info_text(display_frame)
