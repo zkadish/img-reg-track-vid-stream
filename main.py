@@ -258,7 +258,23 @@ def main():
                 detection_start_time = None
                 last_detection = None
                 consecutive_detections = 0
-                print("Reset: Starting detection again")
+                
+                # Reinitialize components
+                print("Reinitializing components...")
+                
+                # Reinitialize detector
+                if detector is None:
+                    print("Initializing YOLO detector...")
+                    detector = ObjectImageRecognition(confidence=IMAGE_RECOGNITION["confidence_threshold"])
+                
+                # Reinitialize tracker
+                print("Initializing tracker...")
+                tracker = ImageTracker(tracker_type=TRACKER_TYPE)
+                
+                # Enable tracking
+                TRACKING["enabled"] = True
+                
+                print("Reset complete: Starting fresh detection and tracking")
             elif key == ord('t'):
                 # Toggle tracking
                 TRACKING["enabled"] = not TRACKING["enabled"]
