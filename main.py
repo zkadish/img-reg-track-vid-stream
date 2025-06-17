@@ -243,7 +243,8 @@ def main():
                 "detection_start_time": detection_start_time,
                 "last_detection": last_detection,
                 "consecutive_detections": consecutive_detections,
-                "tracking_enabled": TRACKING["enabled"]  # Add tracking status
+                "tracking_enabled": TRACKING["enabled"],
+                "detection_enabled": IMAGE_RECOGNITION["enabled"]  # Add detection status
             }
             
             # Update display

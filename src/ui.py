@@ -11,6 +11,7 @@ class TrackingUI:
         self.selected_roi = None
         self.info_text = []
         self.tracking_enabled = False
+        self.detection_enabled = False
         
         # Create window and set mouse callback
         cv2.namedWindow(window_name)
@@ -107,6 +108,10 @@ class TrackingUI:
         if tracking_info and "tracking_enabled" in tracking_info:
             self.tracking_enabled = tracking_info["tracking_enabled"]
         
+        # Update detection status
+        if tracking_info and "detection_enabled" in tracking_info:
+            self.detection_enabled = tracking_info["detection_enabled"]
+        
         # Update info text based on tracking status
         self.info_text = [
             f"Tracker: {tracking_info.get('tracker_type', 'N/A')}",
@@ -136,7 +141,8 @@ class TrackingUI:
         shortcuts = [
             "q - Quit",
             "r - Reset",
-            f"t - Tracking: {'ON' if self.tracking_enabled else 'OFF'}"
+            f"t - Tracking: {'ON' if self.tracking_enabled else 'OFF'}",
+            f"d - Detection: {'ON' if self.detection_enabled else 'OFF'}"
         ]
         
         # Position for keyboard shortcuts (bottom left)
