@@ -57,7 +57,7 @@ class ObjectImageRecognition:
                 x1, y1, x2, y2, conf, class_id = r
                 bbox = [x1, y1, x2 - x1, y2 - y1]  # Convert to [x, y, w, h]
                 detections.append((bbox, conf, int(class_id)))
-            
+                    
             return detections
             
         except Exception as e:
@@ -97,7 +97,7 @@ class ObjectImageRecognition:
                     text_color,
                     text_thickness
                 )
-            
+                          
             return frame
             
         except Exception as e:
