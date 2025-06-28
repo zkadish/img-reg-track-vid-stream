@@ -1,8 +1,8 @@
 # Video settings
 # Turn resolution down when there are less resources...
 VIDEO_SOURCE = 0  # Use 0 for webcam, or provide path to video file
-FRAME_WIDTH = 1280  # Reduced from 1280 for better performance
-FRAME_HEIGHT = 720  # Reduced from 720 for better performance
+FRAME_WIDTH = 1280  # Reduced from 1280 or 640 for better performance
+FRAME_HEIGHT = 720  # Reduced from 720 or 480 for better performance
 FPS = 30 # 30 this setting in not being used
 
 # Tracking settings

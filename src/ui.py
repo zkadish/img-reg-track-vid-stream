@@ -213,19 +213,26 @@ class TrackingUI:
     def _add_keyboard_shortcuts(self, frame):
         """Add keyboard shortcuts to the frame"""
         shortcuts = [
+            "=== CONTROLS ===",
             "q - Quit",
-            "r - Reset",
-            f"i - Image Recognition: {'ON' if self.recognition_enabled else 'OFF'}",
-            f"t - Image Tracking: {'ON' if self.tracking_enabled else 'OFF'}",
-            f"m - Motion Detection: {'ON' if self.motion_enabled else 'OFF'}",
-            "a - Toggle Auto-Reset"
+            "r - Reset All",
+            "=== TOGGLES ===",
+            f"i - Recognition: {'ON' if self.recognition_enabled else 'OFF'}",
+            f"t - Tracking: {'ON' if self.tracking_enabled else 'OFF'}",
+            f"m - Motion: {'ON' if self.motion_enabled else 'OFF'}",
+            "=== MODES ===",
+            "d - Debug Mode",
+            "p - Performance Mode",
+            "c - Confidence Monitor",
+            "s - Simultaneous Mode",
+            "a - Auto-Reset"
         ]
         
         # Calculate text dimensions
         font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = 0.6
+        font_scale = 0.5
         font_thickness = 1
-        line_spacing = 25
+        line_spacing = 20
         
         # Find the longest text for width calculation
         max_width = 0
@@ -234,9 +241,9 @@ class TrackingUI:
             max_width = max(max_width, width)
         
         # Calculate border dimensions with padding
-        padding = 20
+        padding = 15
         border_width = max_width + padding * 2
-        border_height = (len(shortcuts) - 1) * line_spacing + padding * 2
+        border_height = (len(shortcuts)) * line_spacing + padding * 2
         
         # Position for keyboard shortcuts (bottom left)
         y_start = frame.shape[0] - border_height - 10  # 10 pixels from bottom
