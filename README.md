@@ -91,7 +91,7 @@ python main.py
 
 ### Quick Start Guide
 1. **Start the application** - Run `python main.py`
-2. **Move in front of camera** - Motion must be detected for 1 second to activate recognition
+2. **Move in front of camera** - Motion must be detected for 0.1 second to activate recognition
 3. **Wait for detection** - Green boxes will appear after motion threshold is met
 4. **Position an object** - Place a detectable object in the camera view
 5. **Wait for tracking** - Blue tracking box will appear when object is stable
@@ -298,7 +298,7 @@ The application uses a three-phase approach: **Motion Detection** → **Recognit
 - **Visual Feedback**: Red outlines show detected motion areas
 
 #### Phase 2: Motion Duration Validation
-- **1-Second Requirement**: Motion must be sustained for 1 full second
+- **Duration Requirement**: Motion must be sustained for configured duration (0.1s default)
 - **Timer Reset**: If motion stops, timer resets to zero
 - **Continuous Motion**: Only uninterrupted motion counts toward threshold
 - **Status Display**: UI shows motion duration progress
@@ -314,9 +314,9 @@ The application uses a three-phase approach: **Motion Detection** → **Recognit
 ```
 Scene Static → Motion Detected → Timer: 0.0s → Recognition: OFF
               ↓
-              Motion Continues → Timer: 0.5s → Recognition: OFF
+              Motion Continues → Timer: 0.05s → Recognition: OFF
               ↓
-              Motion Continues → Timer: 1.0s → Recognition: ON
+              Motion Continues → Timer: 0.1s → Recognition: ON
               ↓
               Object Detected → Stability Check → Tracking Starts
 ```
@@ -340,9 +340,9 @@ Scene Static → Motion Detected → Timer: 0.0s → Recognition: OFF
 ```python
 MOTION_DETECTION = {
     "enabled": True,           # ON by default
-    "min_area": 500,          # Minimum motion area
+    "min_area": 100,          # Minimum motion area
     "threshold": 25,          # Sensitivity threshold
-    "motion_required_duration": 1.0,  # 1 second requirement
+    "required_duration": 0.1,  # Seconds of motion required before enabling recognition
 }
 ```
 
@@ -351,7 +351,7 @@ MOTION_DETECTION = {
 #### Before Motion (Static Scene)
 ```
 === Motion Detection ===
-Duration: 0.0s / 1.0s
+Duration: 0.0s / 0.1s
 Status: Waiting for motion
 
 === Recognition Stats ===
@@ -361,7 +361,7 @@ Status: Waiting for motion
 #### During Motion (Building Up)
 ```
 === Motion Detection ===
-Duration: 0.7s / 1.0s
+Duration: 0.05s / 0.1s
 Status: Waiting for motion
 
 === Recognition Stats ===
@@ -371,7 +371,7 @@ Status: Waiting for motion
 #### After Motion Threshold Met
 ```
 === Motion Detection ===
-Duration: 1.2s / 1.0s
+Duration: 0.12s / 0.1s
 Status: Ready
 
 === Recognition Stats ===
@@ -382,42 +382,42 @@ Confidence: 0.73
 
 ### Motion Detection Scenarios
 
-#### Scenario 1: Quick Movement (< 1 second)
+#### Scenario 1: Quick Movement (< 0.1 second)
 ```
 0.0s: Person walks by quickly
-0.3s: Person exits frame
+0.05s: Person exits frame
 Result: Timer resets, recognition never activates
 Benefit: Saves CPU on brief, irrelevant motion
 ```
 
-#### Scenario 2: Sustained Activity (≥ 1 second)
+#### Scenario 2: Sustained Activity (≥ 0.1 second)
 ```
 0.0s: Person enters frame
-0.5s: Person continues moving
-1.0s: Recognition activates
-1.2s: Person detected, tracking begins
+0.05s: Person continues moving
+0.1s: Recognition activates
+0.3s: Person detected, tracking begins
 Result: Full pipeline activated for relevant activity
 ```
 
 #### Scenario 3: Intermittent Motion
 ```
 0.0s: Motion detected
-0.7s: Motion stops (timer resets)
-1.0s: Motion detected again (timer restarts)
-2.0s: Recognition activates
+0.07s: Motion stops (timer resets)
+0.2s: Motion detected again (timer restarts)
+0.3s: Recognition activates
 Result: Only sustained motion triggers recognition
 ```
 
 ### Customizing Motion Requirements
 
-#### Faster Response (0.5 seconds)
+#### Faster Response (0.05 seconds)
 ```python
-motion_required_duration = 0.5  # More responsive
+MOTION_DETECTION["required_duration"] = 0.05  # Very responsive
 ```
 
-#### More Conservative (2 seconds)
+#### More Conservative (1.0 seconds)
 ```python
-motion_required_duration = 2.0  # Reduces false triggers
+MOTION_DETECTION["required_duration"] = 1.0  # Reduces false triggers
 ```
 
 #### Disable Motion Triggering
@@ -480,7 +480,7 @@ Tracking: ON
 Motion: ON
 
 === Motion Detection ===
-Duration: 1.2s / 1.0s
+Duration: 0.12s / 0.1s
 Status: Ready
 
 === Recognition Stats ===

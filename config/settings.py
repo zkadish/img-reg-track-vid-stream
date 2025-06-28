@@ -28,7 +28,8 @@ MOTION_DETECTION = {
     "enabled": True,  # Enable/disable motion detection
     "min_area": 100,  # Minimum area for motion detection
     "history": 5,     # Number of frames to keep in history
-    "threshold": 25,  # Threshold for motion detection
+    "threshold": 10,  # 25 Threshold for motion detection
+    "required_duration": 0.1,  # Seconds of motion required before enabling recognition
     "visualization": {
         "enabled": True,  # Show motion visualization
         "color": (0, 0, 255),  # Red color for motion outlines

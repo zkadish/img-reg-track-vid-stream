@@ -67,7 +67,7 @@ def main():
         # Motion detection timing
         motion_start_time = None
         motion_detected_duration = 0
-        motion_required_duration = 0.1  # 0.1 second of motion before enabling recognition
+        motion_required_duration = MOTION_DETECTION["required_duration"]
         
         # FPS calculation variables
         frame_count = 0
