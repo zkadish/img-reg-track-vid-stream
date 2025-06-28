@@ -25,7 +25,7 @@ YOLO = {
 
 # Motion detection settings
 MOTION_DETECTION = {
-    "enabled": False,  # Enable/disable motion detection
+    "enabled": True,  # Enable/disable motion detection
     "min_area": 100,  # Minimum area for motion detection
     "history": 5,     # Number of frames to keep in history
     "threshold": 25,  # Threshold for motion detection

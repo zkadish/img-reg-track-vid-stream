@@ -194,12 +194,20 @@ class TrackingUI:
             ]
         else:
             # Full display during detection phase
+            motion_duration = tracking_info.get('motion_detected_duration', 0)
+            motion_required = tracking_info.get('motion_required_duration', 1.0)
+            recognition_status = "Waiting for motion" if motion_duration < motion_required else "Ready"
+            
             self.info_text = [
                 "=== System Status ===",
                 f"FPS: {tracking_info.get('fps', 0):.1f}",
                 f"Recognition: {'ON' if self.recognition_enabled else 'OFF'}",
                 f"Tracking: {'ON' if self.tracking_enabled else 'OFF'}",
                 f"Motion: {'ON' if self.motion_enabled else 'OFF'}",
+                "",
+                "=== Motion Detection ===",
+                f"Duration: {motion_duration:.1f}s / {motion_required:.1f}s",
+                f"Status: {recognition_status}",
                 "",
                 "=== Recognition Stats ===",
                 f"Status: {'Detecting' if not tracking_info.get('tracking', False) else 'Tracking'}",

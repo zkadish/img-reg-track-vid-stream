@@ -64,6 +64,11 @@ def main():
         # Confidence monitoring
         confidence_check_counter = 0
         
+        # Motion detection timing
+        motion_start_time = None
+        motion_detected_duration = 0
+        motion_required_duration = 0.1  # 0.1 second of motion before enabling recognition
+        
         # FPS calculation variables
         frame_count = 0
         start_time = time.time()
@@ -133,6 +138,24 @@ def main():
             if MOTION_DETECTION["enabled"] and motion_detector and not is_tracking:
                 has_motion, motion_regions = motion_detector.detect(processed_frame)
                 
+                # Track motion duration
+                current_time = time.time()
+                if has_motion:
+                    if motion_start_time is None:
+                        motion_start_time = current_time
+                        motion_detected_duration = 0
+                        print("Motion detected - starting timer")
+                    else:
+                        motion_detected_duration = current_time - motion_start_time
+                        if debug_mode:
+                            print(f"Motion duration: {motion_detected_duration:.1f}s")
+                else:
+                    # Reset motion timer if no motion detected
+                    if motion_start_time is not None:
+                        print("Motion stopped - resetting timer")
+                    motion_start_time = None
+                    motion_detected_duration = 0
+                
                 # Draw motion visualization if enabled
                 if MOTION_DETECTION["visualization"]["enabled"]:
                     frame = motion_detector.draw_motion(
@@ -142,8 +165,10 @@ def main():
                         thickness=MOTION_DETECTION["visualization"]["thickness"]
                     )
             
-            # Image recognition and tracking
-            if IMAGE_RECOGNITION["enabled"] and detector and (not is_tracking or IMAGE_RECOGNITION["continue_during_tracking"]):
+            # Image recognition and tracking (only after motion detected for required duration)
+            motion_requirement_met = (motion_detected_duration >= motion_required_duration) or is_tracking
+            if (IMAGE_RECOGNITION["enabled"] and detector and motion_requirement_met and 
+                (not is_tracking or IMAGE_RECOGNITION["continue_during_tracking"])):
                 if TRACKING["enabled"] and tracker:
                     # Convert frame to RGB for YOLO detection
                     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -335,6 +360,8 @@ def main():
                                         confidence_check_counter = reset_state["confidence_check_counter"]
                                         has_motion = reset_state["has_motion"]
                                         motion_bbox = reset_state["motion_bbox"]
+                                        motion_start_time = reset_state["motion_start_time"]
+                                        motion_detected_duration = reset_state["motion_detected_duration"]
                                         frame_count = reset_state["frame_count"]
                                         start_time = reset_state["start_time"]
                                         fps = reset_state["fps"]
@@ -409,6 +436,8 @@ def main():
                         confidence_check_counter = reset_state["confidence_check_counter"]
                         has_motion = reset_state["has_motion"]
                         motion_bbox = reset_state["motion_bbox"]
+                        motion_start_time = reset_state["motion_start_time"]
+                        motion_detected_duration = reset_state["motion_detected_duration"]
                         frame_count = reset_state["frame_count"]
                         start_time = reset_state["start_time"]
                         fps = reset_state["fps"]
@@ -461,6 +490,8 @@ def main():
                 "auto_reset_enabled": TRACKING["auto_reset_on_failure"],
                 "debug_mode": debug_mode,
                 "performance_mode": performance_mode,
+                "motion_detected_duration": motion_detected_duration,
+                "motion_required_duration": motion_required_duration,
                 "tracker_type": TRACKER_TYPE,
                 "tracking": is_tracking,
                 "object_class": tracked_object,
@@ -490,6 +521,9 @@ def main():
                 # Reset motion detection state
                 has_motion = False
                 motion_bbox = None
+                # Reset motion timing
+                motion_start_time = None
+                motion_detected_duration = 0
                 # Reset FPS calculation
                 frame_count = 0
                 start_time = time.time()
@@ -570,6 +604,9 @@ def main():
                     # Reset motion detection state
                     has_motion = False
                     motion_bbox = None
+                    # Reset motion timing
+                    motion_start_time = None
+                    motion_detected_duration = 0
                     # Reset FPS calculation
                     frame_count = 0
                     start_time = time.time()
@@ -622,11 +659,17 @@ def main():
                     # Reset motion detection state
                     has_motion = False
                     motion_bbox = None
+                    # Reset motion timing
+                    motion_start_time = None
+                    motion_detected_duration = 0
                 else:
                     print("Motion detection disabled")
                     # Reset motion detection state
                     has_motion = False
                     motion_bbox = None
+                    # Reset motion timing
+                    motion_start_time = None
+                    motion_detected_duration = 0
             elif key == ord('d'):
                 # Toggle debug mode
                 debug_mode = not debug_mode
@@ -691,6 +734,8 @@ def reset_application_state():
         "confidence_check_counter": 0,
         "has_motion": False,
         "motion_bbox": None,
+        "motion_start_time": None,
+        "motion_detected_duration": 0,
         "frame_count": 0,
         "start_time": time.time(),
         "fps": 0,
