@@ -15,6 +15,13 @@ class TrackingUI:
         self.recognition_enabled = False
         self.motion_enabled = False
         
+        # Mode states
+        self.debug_mode = False
+        self.performance_mode = False
+        self.confidence_monitoring = False
+        self.simultaneous_mode = False
+        self.auto_reset = False
+        
         # Create window and set mouse callback
         cv2.namedWindow(window_name)
         cv2.setMouseCallback(window_name, self._mouse_callback)
@@ -153,6 +160,14 @@ class TrackingUI:
         if tracking_info and "motion_enabled" in tracking_info:
             self.motion_enabled = tracking_info["motion_enabled"]
         
+        # Update mode states
+        if tracking_info:
+            self.confidence_monitoring = tracking_info.get('confidence_monitoring_enabled', False)
+            self.simultaneous_mode = tracking_info.get('simultaneous_mode', False)
+            self.auto_reset = tracking_info.get('auto_reset_enabled', False)
+            self.debug_mode = tracking_info.get('debug_mode', False)
+            self.performance_mode = tracking_info.get('performance_mode', False)
+        
         # Calculate stability time
         stability_time = 0.0
         if tracking_info.get('detection_start_time') is not None:
@@ -221,11 +236,11 @@ class TrackingUI:
             f"t - Tracking: {'ON' if self.tracking_enabled else 'OFF'}",
             f"m - Motion: {'ON' if self.motion_enabled else 'OFF'}",
             "=== MODES ===",
-            "d - Debug Mode",
-            "p - Performance Mode",
-            "c - Confidence Monitor",
-            "s - Simultaneous Mode",
-            "a - Auto-Reset"
+            f"d - Debug: {'ON' if self.debug_mode else 'OFF'}",
+            f"p - Performance: {'ON' if self.performance_mode else 'OFF'}",
+            f"c - Confidence Monitor: {'ON' if self.confidence_monitoring else 'OFF'}",
+            f"s - Simultaneous: {'ON' if self.simultaneous_mode else 'OFF'}",
+            f"a - Auto-Reset: {'ON' if self.auto_reset else 'OFF'}"
         ]
         
         # Calculate text dimensions

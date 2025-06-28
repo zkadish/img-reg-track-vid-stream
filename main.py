@@ -459,6 +459,8 @@ def main():
                 "confidence_monitoring_enabled": TRACKING["confidence_monitoring"]["enabled"],
                 "simultaneous_mode": IMAGE_RECOGNITION["continue_during_tracking"],
                 "auto_reset_enabled": TRACKING["auto_reset_on_failure"],
+                "debug_mode": debug_mode,
+                "performance_mode": performance_mode,
                 "tracker_type": TRACKER_TYPE,
                 "tracking": is_tracking,
                 "object_class": tracked_object,
