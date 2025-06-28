@@ -40,7 +40,7 @@ MOTION_DETECTION = {
 IMAGE_RECOGNITION = {
     "enabled": True,  # Enable/disable image recognition
     "confidence_threshold": 0.5,  # Minimum confidence for detections
-    "continue_during_tracking": True,  # Continue recognition even when tracking is active
+    "continue_during_tracking": False,  # Continue recognition even when tracking is active
     "visualization": {
         "enabled": True,  # Show detection visualization
         "box_color": (0, 255, 0),  # Green color for detection boxes

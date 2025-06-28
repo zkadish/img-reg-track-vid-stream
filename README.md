@@ -147,10 +147,139 @@ TRACKING = {
 IMAGE_RECOGNITION = {
     "enabled": True,
     "confidence_threshold": 0.5,
-    "continue_during_tracking": True,  # Simultaneous mode
+    "continue_during_tracking": False,  # Simultaneous mode (OFF by default)
     "model_path": "yolov8n.pt"
 }
 ```
+
+## 🎯 Tracking System Details
+
+### How Tracking Works
+
+The application uses a two-phase approach: **Detection Phase** → **Tracking Phase**
+
+#### Detection Phase
+1. **Object Detection**: YOLOv8 continuously scans for objects
+2. **Confidence Check**: Objects must meet minimum confidence threshold (50%)
+3. **Stability Validation**: Objects must be consistently detected
+4. **Tracking Initiation**: Once stable, OpenCV tracker takes over
+
+#### Tracking Phase
+1. **Continuous Tracking**: OpenCV tracker follows the object
+2. **Confidence Monitoring**: Periodic re-validation using YOLO
+3. **Automatic Fallback**: Returns to detection if tracking fails
+
+### Confidence Requirements
+
+| Stage | Threshold | Purpose |
+|-------|-----------|---------|
+| **Initial Detection** | ≥50% | YOLO must detect object with high confidence |
+| **Tracking Start** | ≥50% | Object must maintain confidence to begin tracking |
+| **Tracking Continue** | ≥50% | Checked every 10 frames during tracking |
+
+### Stability Requirements
+
+Before tracking starts, the system validates object stability:
+
+```python
+"stability": {
+    "delay_seconds": 1,      # Wait 1 second before tracking
+    "min_detections": 2,     # Require 2 consecutive detections  
+    "same_class": True       # Must be same object type
+}
+```
+
+**Example Timeline:**
+```
+0.0s: Object detected (person, 73%) → Timer starts
+0.1s: Same object detected (person, 68%) → Count: 2 detections
+1.0s: 1 second elapsed with stable detections → Tracking starts!
+```
+
+### Confidence Monitoring During Tracking
+
+The system continuously monitors tracking quality:
+
+- **Check Interval**: Every 10 frames
+- **Confidence Threshold**: 50% minimum
+- **Automatic Stopping**: Tracking stops if confidence drops
+- **Auto-Reset**: Optionally resets entire application on failure
+
+**Monitoring Process:**
+```
+Frames 1-9:  Normal tracking (OpenCV tracker only)
+Frame 10:    Extract tracked region → Run YOLO → Check confidence
+             If ≥50% → Continue tracking
+             If <50% → Stop tracking, return to detection
+Frames 11-19: Normal tracking continues...
+Frame 20:    Check confidence again...
+```
+
+### Tracking Failure Recovery
+
+When tracking fails, the system offers multiple recovery options:
+
+#### Standard Recovery (Auto-Reset OFF)
+- Stops tracking
+- Re-enables detection systems
+- Maintains application state
+
+#### Auto-Reset Recovery (Auto-Reset ON) - **Default**
+- Resets entire application state
+- Reinitializes all components
+- Provides clean restart
+- Better performance recovery
+
+### Tracking Modes
+
+#### Standard Mode (Default)
+- Detection runs until object found
+- Tracking takes over exclusively
+- Detection stops during tracking
+- Optimal performance
+
+#### Simultaneous Mode (Optional)
+- Detection and tracking run together
+- Green boxes (YOLO) + Blue box (tracking)
+- Real-time accuracy comparison
+- Higher computational load
+
+### Configuration Examples
+
+#### Fast Tracking (Immediate Start)
+```python
+"stability": {
+    "delay_seconds": 0.5,    # Faster response
+    "min_detections": 1,     # Single detection sufficient
+}
+```
+
+#### Stable Tracking (Conservative)
+```python
+"stability": {
+    "delay_seconds": 3,      # Longer validation
+    "min_detections": 5,     # Multiple detections required
+}
+```
+
+#### High Confidence Tracking
+```python
+"confidence_threshold": 0.8,     # 80% confidence to start
+"confidence_monitoring": {
+    "min_confidence": 0.7,   # 70% to continue
+    "check_interval": 5,     # Check every 5 frames
+}
+```
+
+### Troubleshooting Tracking Issues
+
+| Problem | Solution |
+|---------|----------|
+| **Tracking starts too quickly** | Increase `delay_seconds` or `min_detections` |
+| **Tracking never starts** | Decrease `confidence_threshold` |
+| **Tracking stops frequently** | Lower `min_confidence` or increase `check_interval` |
+| **Poor tracking accuracy** | Switch to CSRT tracker, enable confidence monitoring |
+| **Slow performance** | Use KCF tracker, disable simultaneous mode |
 
 ## 🏃‍♂️ Performance Guide
 
