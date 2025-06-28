@@ -1,12 +1,14 @@
 # Video settings
 # Turn resolution down when there are less resources...
 VIDEO_SOURCE = 0  # Use 0 for webcam, or provide path to video file
-FRAME_WIDTH = 1280 # 640 1280
-FRAME_HEIGHT = 720 # 480 720
+FRAME_WIDTH = 1280  # Reduced from 1280 for better performance
+FRAME_HEIGHT = 720  # Reduced from 720 for better performance
 FPS = 30 # 30 this setting in not being used
 
 # Tracking settings
-TRACKER_TYPE = "CSRT"  # Options: CSRT, KCF, MOSSE, MIL, BOOSTING, MEDIANFLOW, TLD
+TRACKER_TYPE = "KCF"  # Fast tracker with legacy API
+# Available trackers: CSRT (accurate), KCF (fast), MOSSE (fastest), MIL, BOOSTING, MEDIANFLOW, TLD
+# Performance ranking: MOSSE (fastest) > KCF (fast) > CSRT (accurate but slower)
 CONFIDENCE_THRESHOLD = 0.5
 
 # Display settings
@@ -38,6 +40,7 @@ MOTION_DETECTION = {
 IMAGE_RECOGNITION = {
     "enabled": True,  # Enable/disable image recognition
     "confidence_threshold": 0.5,  # Minimum confidence for detections
+    "continue_during_tracking": True,  # Continue recognition even when tracking is active
     "visualization": {
         "enabled": True,  # Show detection visualization
         "box_color": (0, 255, 0),  # Green color for detection boxes
@@ -78,10 +81,17 @@ TRACKING = {
     "enabled": True,  # Enable/disable image tracking
     "auto_track": True,  # Automatically start tracking when object detected
     "confidence_threshold": 0.5,  # Minimum confidence to start tracking
+    "auto_reset_on_failure": True,  # Automatically reset app when tracking fails
+    "confidence_monitoring": {
+        "enabled": True,  # Enable confidence monitoring during tracking
+        "check_interval": 10,  # Check confidence every N frames
+        "min_confidence": 0.5,  # Minimum confidence to continue tracking
+        "stop_on_low_confidence": True  # Stop tracking when confidence drops
+    },
     "stability": {
         "enabled": True,  # Enable stability check before tracking
-        "delay_seconds": 3,  # Seconds to wait before starting tracking
-        "min_detections": 3,  # Minimum number of consecutive detections
+        "delay_seconds": 1,  # Seconds to wait before starting tracking (reduced from 3)
+        "min_detections": 2,  # Minimum number of consecutive detections (reduced from 3)
         "same_class": True  # Require same object class for all detections
     },
     "visualization": {

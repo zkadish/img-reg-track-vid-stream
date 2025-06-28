@@ -159,24 +159,44 @@ class TrackingUI:
             stability_time = time.time() - tracking_info['detection_start_time']
         
         # Update info text based on tracking status
-        self.info_text = [
-            "=== System Status ===",
-            f"FPS: {tracking_info.get('fps', 0):.1f}",
-            f"Recognition: {'ON' if self.recognition_enabled else 'OFF'}",
-            f"Tracking: {'ON' if self.tracking_enabled else 'OFF'}",
-            f"Motion: {'ON' if self.motion_enabled else 'OFF'}",
-            "",
-            "=== Recognition Stats ===",
-            f"Status: {'Detecting' if not tracking_info.get('tracking', False) else 'Tracking'}",
-            f"Object: {tracking_info.get('object_class', 'None')}",
-            f"Confidence: {tracking_info.get('confidence', 0):.2f}",
-            f"Stability: {stability_time:.1f}s",
-            f"Detections: {tracking_info.get('consecutive_detections', 0)}",
-            "",
-            "=== Tracking Stats ===",
-            f"Tracker: {tracking_info.get('tracker_type', 'N/A')}",
-            f"Status: {'Active' if tracking_info.get('tracking', False) else 'Inactive'}"
-        ]
+        if tracking_info.get('tracking', False):
+            # Simplified display during tracking for better performance
+            confidence_monitoring = tracking_info.get('confidence_monitoring_enabled', False)
+            simultaneous_mode = tracking_info.get('simultaneous_mode', False)
+            auto_reset = tracking_info.get('auto_reset_enabled', False)
+            self.info_text = [
+                "=== TRACKING MODE ===",
+                f"FPS: {tracking_info.get('fps', 0):.1f}",
+                f"Object: {tracking_info.get('object_class', 'None')}",
+                f"Confidence: {tracking_info.get('confidence', 0):.2f}",
+                f"Tracker: {tracking_info.get('tracker_type', 'N/A')}",
+                f"Confidence Monitor: {'ON' if confidence_monitoring else 'OFF'}",
+                f"Simultaneous Mode: {'ON' if simultaneous_mode else 'OFF'}",
+                f"Auto-Reset: {'ON' if auto_reset else 'OFF'}",
+                "",
+                "Press 'r' to reset",
+                "Press 's' to toggle simultaneous mode"
+            ]
+        else:
+            # Full display during detection phase
+            self.info_text = [
+                "=== System Status ===",
+                f"FPS: {tracking_info.get('fps', 0):.1f}",
+                f"Recognition: {'ON' if self.recognition_enabled else 'OFF'}",
+                f"Tracking: {'ON' if self.tracking_enabled else 'OFF'}",
+                f"Motion: {'ON' if self.motion_enabled else 'OFF'}",
+                "",
+                "=== Recognition Stats ===",
+                f"Status: {'Detecting' if not tracking_info.get('tracking', False) else 'Tracking'}",
+                f"Object: {tracking_info.get('object_class', 'None')}",
+                f"Confidence: {tracking_info.get('confidence', 0):.2f}",
+                f"Stability: {stability_time:.1f}s",
+                f"Detections: {tracking_info.get('consecutive_detections', 0)}",
+                "",
+                "=== Tracking Stats ===",
+                f"Tracker: {tracking_info.get('tracker_type', 'N/A')}",
+                f"Status: {'Active' if tracking_info.get('tracking', False) else 'Inactive'}"
+            ]
         
         # Draw info text
         self._draw_info_text(display_frame)
@@ -197,7 +217,8 @@ class TrackingUI:
             "r - Reset",
             f"i - Image Recognition: {'ON' if self.recognition_enabled else 'OFF'}",
             f"t - Image Tracking: {'ON' if self.tracking_enabled else 'OFF'}",
-            f"m - Motion Detection: {'ON' if self.motion_enabled else 'OFF'}"
+            f"m - Motion Detection: {'ON' if self.motion_enabled else 'OFF'}",
+            "a - Toggle Auto-Reset"
         ]
         
         # Calculate text dimensions

@@ -47,6 +47,22 @@ def main():
         print("Press 't' to toggle tracking on/off")
         print("Press 'i' to toggle recognition on/off")
         print("Press 'm' to toggle motion detection on/off")
+        print("Press 'd' to enable debug mode")
+        print("Press 'p' to toggle performance mode")
+        print("Press 'c' to toggle confidence monitoring")
+        print("Press 's' to toggle simultaneous tracking and recognition")
+        
+        # Debug mode
+        debug_mode = False
+        
+        # Performance mode
+        performance_mode = False
+        
+        # Performance timing
+        tracking_times = []
+        
+        # Confidence monitoring
+        confidence_check_counter = 0
         
         # FPS calculation variables
         frame_count = 0
@@ -70,6 +86,17 @@ def main():
             print("Error: Could not read frame")
             return
         
+        # Test detection to verify YOLO is working
+        if detector:
+            print("Testing YOLO detection...")
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            test_detections = detector.detect(rgb_frame)
+            print(f"Initial detection test found {len(test_detections)} objects")
+            if len(test_detections) > 0:
+                for bbox, conf, class_id in test_detections[:3]:  # Show first 3
+                    obj_name = detector.class_names[class_id]
+                    print(f"  - {obj_name}: {conf:.2f}")
+        
         print("Starting image recognition and tracking...")
         
         while True:
@@ -88,18 +115,22 @@ def main():
                 frame_count = 0
                 start_time = time.time()
             
-            # Apply preprocessing
-            processed_frame = preprocess_frame(
-                frame,
-                target_size=PREPROCESSING["target_size"],
-                normalize=PREPROCESSING["normalize"],
-                denoise=PREPROCESSING["denoise"],
-                enhance_contrast=PREPROCESSING["enhance_contrast"]
-            )
+            # Apply preprocessing only during detection phase, not tracking
+            if not is_tracking:
+                processed_frame = preprocess_frame(
+                    frame,
+                    target_size=PREPROCESSING["target_size"],
+                    normalize=PREPROCESSING["normalize"],
+                    denoise=PREPROCESSING["denoise"],
+                    enhance_contrast=PREPROCESSING["enhance_contrast"]
+                )
+            else:
+                # During tracking, use original frame for better performance
+                processed_frame = frame
             
-            # Detect motion if enabled
+            # Detect motion if enabled (only during detection phase)
             has_motion = False
-            if MOTION_DETECTION["enabled"] and motion_detector:
+            if MOTION_DETECTION["enabled"] and motion_detector and not is_tracking:
                 has_motion, motion_regions = motion_detector.detect(processed_frame)
                 
                 # Draw motion visualization if enabled
@@ -111,17 +142,24 @@ def main():
                         thickness=MOTION_DETECTION["visualization"]["thickness"]
                     )
             
-            # Process frame
-            processed_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            
             # Image recognition and tracking
-            if IMAGE_RECOGNITION["enabled"] and detector and not is_tracking:
+            if IMAGE_RECOGNITION["enabled"] and detector and (not is_tracking or IMAGE_RECOGNITION["continue_during_tracking"]):
                 if TRACKING["enabled"] and tracker:
-                    # Perform object detection on the entire frame
-                    detections = detector.detect(processed_frame)
+                    # Convert frame to RGB for YOLO detection
+                    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                     
-                    # Check for high confidence detections if auto-track is enabled
-                    if TRACKING["auto_track"] and TRACKING["stability"]["enabled"]:
+                    # Perform object detection on the RGB frame
+                    detections = detector.detect(rgb_frame)
+                    
+                    # Debug output
+                    if debug_mode and len(detections) > 0:
+                        print(f"Found {len(detections)} detections:")
+                        for i, (bbox, conf, class_id) in enumerate(detections):
+                            obj_name = detector.class_names[class_id]
+                            print(f"  {i+1}. {obj_name}: {conf:.2f}")
+                    
+                    # Check for high confidence detections if auto-track is enabled and not already tracking
+                    if TRACKING["auto_track"] and TRACKING["stability"]["enabled"] and not is_tracking:
                         current_time = time.time()
                         
                         # Find best detection
@@ -143,16 +181,20 @@ def main():
                                 detection_start_time = current_time
                                 consecutive_detections = 1
                                 last_detection = (bbox, conf, current_object)
+                                print(f"New detection: {current_object} with confidence {conf:.2f}")
                             else:
                                 # Update consecutive detections
                                 consecutive_detections += 1
                                 last_detection = (bbox, conf, current_object)
+                                print(f"Consecutive detection #{consecutive_detections}: {current_object} ({conf:.2f})")
                             
                             # Check if stability conditions are met
                             time_elapsed = current_time - detection_start_time
+                            print(f"Stability check: {time_elapsed:.1f}s elapsed, {consecutive_detections} detections")
+                            
                             if (time_elapsed >= TRACKING["stability"]["delay_seconds"] and 
                                 consecutive_detections >= TRACKING["stability"]["min_detections"]):
-                                # Start tracking
+                                # Start tracking - use BGR frame for tracker initialization
                                 is_tracking = True
                                 tracked_bbox = bbox
                                 tracked_object = current_object
@@ -160,10 +202,26 @@ def main():
                                 print(f"Detected {tracked_object} with confidence {conf:.2f}")
                                 print(f"Stable detection for {time_elapsed:.1f} seconds")
                                 print("Starting tracking...")
-                                tracker.initialize(frame, tracked_bbox)
-                                # Stop image recognition
-                                IMAGE_RECOGNITION["enabled"] = False
-                                print("Image recognition stopped, continuing to track object")
+                                
+                                # Initialize tracker with BGR frame (not RGB)
+                                success = tracker.initialize(frame, tracked_bbox)
+                                if success:
+                                    print("Tracker initialized successfully")
+                                    # Reset confidence check counter
+                                    confidence_check_counter = 0
+                                    # Stop motion detection but keep recognition if configured
+                                    MOTION_DETECTION["enabled"] = False
+                                    if not IMAGE_RECOGNITION["continue_during_tracking"]:
+                                        IMAGE_RECOGNITION["enabled"] = False
+                                        print("Image recognition and motion detection stopped, continuing to track object")
+                                    else:
+                                        print("Motion detection stopped, continuing with tracking and recognition")
+                                else:
+                                    print("Failed to initialize tracker")
+                                    is_tracking = False
+                                    tracked_bbox = None
+                                    tracked_object = None
+                                    tracked_confidence = 0
                         else:
                             # Reset stability check if no good detection
                             detection_start_time = None
@@ -183,7 +241,8 @@ def main():
                         )
                 else:
                     # Just perform detection without tracking
-                    detections = detector.detect(processed_frame)
+                    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    detections = detector.detect(rgb_frame)
                     if IMAGE_RECOGNITION["visualization"]["enabled"]:
                         frame = detector.draw_detections(
                             frame, 
@@ -197,10 +256,121 @@ def main():
             
             # Update tracking if active
             if is_tracking and tracker:
+                # Measure tracking performance
+                if performance_mode:
+                    track_start = time.time()
+                
                 # Update tracker
                 success, bbox = tracker.update(frame)
+                
+                if performance_mode:
+                    track_time = (time.time() - track_start) * 1000  # Convert to ms
+                    tracking_times.append(track_time)
+                    if len(tracking_times) > 30:  # Keep last 30 measurements
+                        tracking_times.pop(0)
+                    avg_track_time = sum(tracking_times) / len(tracking_times)
+                    print(f"Tracking time: {track_time:.1f}ms (avg: {avg_track_time:.1f}ms)")
+                
                 if success:
                     tracked_bbox = bbox
+                    
+                    # Check confidence periodically if enabled
+                    if (TRACKING["confidence_monitoring"]["enabled"] and 
+                        detector and 
+                        TRACKING["confidence_monitoring"]["stop_on_low_confidence"]):
+                        
+                        confidence_check_counter += 1
+                        if confidence_check_counter >= TRACKING["confidence_monitoring"]["check_interval"]:
+                            confidence_check_counter = 0
+                            
+                            # Extract the tracked region and run detection on it
+                            x, y, w, h = [int(v) for v in bbox]
+                            
+                            # Ensure bbox is within frame bounds
+                            x = max(0, min(x, frame.shape[1] - 1))
+                            y = max(0, min(y, frame.shape[0] - 1))
+                            w = max(1, min(w, frame.shape[1] - x))
+                            h = max(1, min(h, frame.shape[0] - y))
+                            
+                            if w > 10 and h > 10:  # Only check if region is large enough
+                                # Extract tracked region
+                                tracked_region = frame[y:y+h, x:x+w]
+                                
+                                # Convert to RGB for YOLO
+                                rgb_region = cv2.cvtColor(tracked_region, cv2.COLOR_BGR2RGB)
+                                
+                                # Run detection on the tracked region
+                                region_detections = detector.detect(rgb_region)
+                                
+                                # Check if our tracked object is still detected with sufficient confidence
+                                object_still_detected = False
+                                current_confidence = 0
+                                
+                                for det_bbox, conf, class_id in region_detections:
+                                    detected_object = detector.class_names[class_id]
+                                    if (detected_object == tracked_object and 
+                                        conf >= TRACKING["confidence_monitoring"]["min_confidence"]):
+                                        object_still_detected = True
+                                        current_confidence = conf
+                                        # Update tracked confidence
+                                        tracked_confidence = conf
+                                        if debug_mode:
+                                            print(f"Confidence check: {tracked_object} still detected with {conf:.2f}")
+                                        break
+                                
+                                if not object_still_detected:
+                                    print(f"Confidence dropped below {TRACKING['confidence_monitoring']['min_confidence']:.2f} - stopping tracking")
+                                    
+                                    # Check if auto-reset is enabled
+                                    if TRACKING["auto_reset_on_failure"]:
+                                        # Auto-reset the entire application
+                                        reset_state = reset_application_state()
+                                        is_tracking = reset_state["is_tracking"]
+                                        tracked_bbox = reset_state["tracked_bbox"]
+                                        tracked_object = reset_state["tracked_object"]
+                                        tracked_confidence = reset_state["tracked_confidence"]
+                                        detection_start_time = reset_state["detection_start_time"]
+                                        last_detection = reset_state["last_detection"]
+                                        consecutive_detections = reset_state["consecutive_detections"]
+                                        confidence_check_counter = reset_state["confidence_check_counter"]
+                                        has_motion = reset_state["has_motion"]
+                                        motion_bbox = reset_state["motion_bbox"]
+                                        frame_count = reset_state["frame_count"]
+                                        start_time = reset_state["start_time"]
+                                        fps = reset_state["fps"]
+                                        
+                                        # Reinitialize components
+                                        print("Reinitializing components after confidence failure...")
+                                        
+                                        # Reset motion detector
+                                        if motion_detector is not None:
+                                            motion_detector = MotionDetector(
+                                                min_area=MOTION_DETECTION["min_area"],
+                                                var_threshold=MOTION_DETECTION["threshold"]
+                                            )
+                                        
+                                        # Reset tracker
+                                        if tracker is not None:
+                                            tracker = ImageTracker()
+                                        
+                                        # Re-enable recognition and motion detection
+                                        IMAGE_RECOGNITION["enabled"] = True
+                                        MOTION_DETECTION["enabled"] = True
+                                        
+                                        print("Application reset complete - ready for new detection")
+                                    else:
+                                        # Original behavior - just reset tracking state
+                                        is_tracking = False
+                                        tracked_bbox = None
+                                        tracked_object = None
+                                        tracked_confidence = 0
+                                        # Re-enable recognition and motion detection if needed
+                                        if not IMAGE_RECOGNITION["continue_during_tracking"]:
+                                            IMAGE_RECOGNITION["enabled"] = True
+                                        MOTION_DETECTION["enabled"] = True
+                                        print("Low confidence - re-enabling detection systems")
+                                    continue  # Skip drawing this frame
+                    
                     # Draw tracking box if visualization is enabled
                     if TRACKING["visualization"]["enabled"]:
                         x, y, w, h = [int(v) for v in bbox]
@@ -224,10 +394,55 @@ def main():
                         )
                 else:
                     print("Tracking lost")
-                    is_tracking = False
-                    tracked_bbox = None
-                    tracked_object = None
-                    tracked_confidence = 0
+                    
+                    # Check if auto-reset is enabled
+                    if TRACKING["auto_reset_on_failure"]:
+                        # Auto-reset the entire application
+                        reset_state = reset_application_state()
+                        is_tracking = reset_state["is_tracking"]
+                        tracked_bbox = reset_state["tracked_bbox"]
+                        tracked_object = reset_state["tracked_object"]
+                        tracked_confidence = reset_state["tracked_confidence"]
+                        detection_start_time = reset_state["detection_start_time"]
+                        last_detection = reset_state["last_detection"]
+                        consecutive_detections = reset_state["consecutive_detections"]
+                        confidence_check_counter = reset_state["confidence_check_counter"]
+                        has_motion = reset_state["has_motion"]
+                        motion_bbox = reset_state["motion_bbox"]
+                        frame_count = reset_state["frame_count"]
+                        start_time = reset_state["start_time"]
+                        fps = reset_state["fps"]
+                        
+                        # Reinitialize components
+                        print("Reinitializing components after tracking failure...")
+                        
+                        # Reset motion detector
+                        if motion_detector is not None:
+                            motion_detector = MotionDetector(
+                                min_area=MOTION_DETECTION["min_area"],
+                                var_threshold=MOTION_DETECTION["threshold"]
+                            )
+                        
+                        # Reset tracker
+                        if tracker is not None:
+                            tracker = ImageTracker()
+                        
+                        # Re-enable recognition and motion detection
+                        IMAGE_RECOGNITION["enabled"] = True
+                        MOTION_DETECTION["enabled"] = True
+                        
+                        print("Application reset complete - ready for new detection")
+                    else:
+                        # Original behavior - just reset tracking state
+                        is_tracking = False
+                        tracked_bbox = None
+                        tracked_object = None
+                        tracked_confidence = 0
+                        # Re-enable recognition and motion detection if needed
+                        if not IMAGE_RECOGNITION["continue_during_tracking"]:
+                            IMAGE_RECOGNITION["enabled"] = True
+                        MOTION_DETECTION["enabled"] = True
+                        print("Tracking lost - re-enabling detection systems")
             
             # Update tracking info
             tracking_info = {
@@ -241,6 +456,9 @@ def main():
                 "tracking_enabled": TRACKING["enabled"],
                 "recognition_enabled": IMAGE_RECOGNITION["enabled"],
                 "motion_enabled": MOTION_DETECTION["enabled"],
+                "confidence_monitoring_enabled": TRACKING["confidence_monitoring"]["enabled"],
+                "simultaneous_mode": IMAGE_RECOGNITION["continue_during_tracking"],
+                "auto_reset_enabled": TRACKING["auto_reset_on_failure"],
                 "tracker_type": TRACKER_TYPE,
                 "tracking": is_tracking,
                 "object_class": tracked_object,
@@ -265,6 +483,8 @@ def main():
                 detection_start_time = None
                 last_detection = None
                 consecutive_detections = 0
+                # Reset confidence monitoring
+                confidence_check_counter = 0
                 # Reset motion detection state
                 has_motion = False
                 motion_bbox = None
@@ -295,9 +515,10 @@ def main():
                 # Reset tracker
                 if tracker is not None:
                     tracker = ImageTracker()
-                # Enable recognition
+                # Enable recognition and motion detection
                 IMAGE_RECOGNITION["enabled"] = True
-                print("Recognition enabled")
+                MOTION_DETECTION["enabled"] = True
+                print("Recognition and motion detection enabled")
                 # Initialize detector if needed
                 if detector is None:
                     print("Initializing YOLO detector...")
@@ -318,6 +539,9 @@ def main():
                     print("Initializing tracker...")
                     tracker = ImageTracker(tracker_type=TRACKER_TYPE)
                     
+                    # Re-enable recognition and motion detection
+                    IMAGE_RECOGNITION["enabled"] = True
+                    MOTION_DETECTION["enabled"] = True
                     print("Tracking enabled: Starting fresh detection and tracking")
                 else:
                     print("Tracking disabled")
@@ -330,6 +554,8 @@ def main():
                 IMAGE_RECOGNITION["enabled"] = not IMAGE_RECOGNITION["enabled"]
                 if IMAGE_RECOGNITION["enabled"]:
                     print("Recognition enabled")
+                    # Also enable motion detection when recognition is enabled
+                    MOTION_DETECTION["enabled"] = True
                     # Reset tracking state
                     is_tracking = False
                     tracked_bbox = None
@@ -399,6 +625,38 @@ def main():
                     # Reset motion detection state
                     has_motion = False
                     motion_bbox = None
+            elif key == ord('d'):
+                # Toggle debug mode
+                debug_mode = not debug_mode
+                print(f"Debug mode: {'ON' if debug_mode else 'OFF'}")
+            elif key == ord('p'):
+                # Toggle performance mode
+                performance_mode = not performance_mode
+                print(f"Performance mode: {'ON' if performance_mode else 'OFF'}")
+            elif key == ord('c'):
+                # Toggle confidence monitoring
+                TRACKING["confidence_monitoring"]["enabled"] = not TRACKING["confidence_monitoring"]["enabled"]
+                print(f"Confidence monitoring: {'ON' if TRACKING['confidence_monitoring']['enabled'] else 'OFF'}")
+            elif key == ord('s'):
+                # Toggle simultaneous tracking and recognition mode
+                IMAGE_RECOGNITION["continue_during_tracking"] = not IMAGE_RECOGNITION["continue_during_tracking"]
+                if IMAGE_RECOGNITION["continue_during_tracking"]:
+                    print("Simultaneous mode enabled - tracking and recognition will run together")
+                    # Enable recognition if it was disabled
+                    IMAGE_RECOGNITION["enabled"] = True
+                else:
+                    print("Simultaneous mode disabled - recognition will stop during tracking")
+                    # If currently tracking, disable recognition
+                    if is_tracking:
+                        IMAGE_RECOGNITION["enabled"] = False
+            elif key == ord('a'):
+                # Toggle auto-reset on tracking failure
+                TRACKING["auto_reset_on_failure"] = not TRACKING["auto_reset_on_failure"]
+                print(f"Auto-reset on tracking failure: {'ON' if TRACKING['auto_reset_on_failure'] else 'OFF'}")
+                if TRACKING["auto_reset_on_failure"]:
+                    print("  App will reset completely when tracking fails")
+                else:
+                    print("  App will only re-enable detection systems when tracking fails")
     
     except Exception as e:
         print(f"Error: {str(e)}")
@@ -413,6 +671,29 @@ def main():
         if 'ui' in locals():
             ui.cleanup()
         cv2.destroyAllWindows()
+
+def reset_application_state():
+    """Reset all application state variables and components"""
+    print("Auto-resetting application...")
+    
+    # This function returns a dictionary of reset values
+    # that will be used to update the main loop variables
+    return {
+        "is_tracking": False,
+        "tracked_bbox": None,
+        "tracked_object": None,
+        "tracked_confidence": 0,
+        "detection_start_time": None,
+        "last_detection": None,
+        "consecutive_detections": 0,
+        "confidence_check_counter": 0,
+        "has_motion": False,
+        "motion_bbox": None,
+        "frame_count": 0,
+        "start_time": time.time(),
+        "fps": 0,
+        "reset_components": True  # Flag to reinitialize components
+    }
 
 if __name__ == "__main__":
     main() 

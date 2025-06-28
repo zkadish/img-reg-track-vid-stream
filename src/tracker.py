@@ -25,23 +25,44 @@ class ImageTracker:
 
     def _create_tracker(self):
         """Create the appropriate tracker based on type"""
-        if self.tracker_type == "CSRT":
-            return cv2.legacy.TrackerCSRT_create()
-        elif self.tracker_type == "KCF":
-            return cv2.legacy.TrackerKCF_create()
-        elif self.tracker_type == "MOSSE":
-            return cv2.legacy.TrackerMOSSE_create()
-        elif self.tracker_type == "MIL":
-            return cv2.legacy.TrackerMIL_create()
-        elif self.tracker_type == "BOOSTING":
-            return cv2.legacy.TrackerBoosting_create()
-        elif self.tracker_type == "MEDIANFLOW":
-            return cv2.legacy.TrackerMedianFlow_create()
-        elif self.tracker_type == "TLD":
-            return cv2.legacy.TrackerTLD_create()
-        else:
-            print(f"Warning: Unknown tracker type '{self.tracker_type}'. Using CSRT instead.")
-            return cv2.legacy.TrackerCSRT_create()
+        try:
+            # Try new OpenCV 4.x API first
+            if self.tracker_type == "MIL":
+                return cv2.TrackerMIL_create()
+            elif self.tracker_type == "GOTURN":
+                return cv2.TrackerGOTURN_create()
+            elif self.tracker_type == "DASIAMRPN":
+                return cv2.TrackerDaSiamRPN_create()
+            elif self.tracker_type == "NANO":
+                return cv2.TrackerNano_create()
+            elif self.tracker_type == "VIT":
+                return cv2.TrackerVit_create()
+            else:
+                # Try legacy API for older trackers
+                try:
+                    if self.tracker_type == "CSRT":
+                        return cv2.legacy.TrackerCSRT_create()
+                    elif self.tracker_type == "KCF":
+                        return cv2.legacy.TrackerKCF_create()
+                    elif self.tracker_type == "MOSSE":
+                        return cv2.legacy.TrackerMOSSE_create()
+                    elif self.tracker_type == "BOOSTING":
+                        return cv2.legacy.TrackerBoosting_create()
+                    elif self.tracker_type == "MEDIANFLOW":
+                        return cv2.legacy.TrackerMedianFlow_create()
+                    elif self.tracker_type == "TLD":
+                        return cv2.legacy.TrackerTLD_create()
+                except AttributeError:
+                    pass
+                
+                # Default to MIL if others fail
+                print(f"Warning: Tracker '{self.tracker_type}' not available. Using MIL instead.")
+                return cv2.TrackerMIL_create()
+                
+        except Exception as e:
+            print(f"Error creating tracker: {e}")
+            print("Falling back to MIL tracker")
+            return cv2.TrackerMIL_create()
 
     def initialize(self, frame, bbox, object_class=None, confidence=None):
         """Initialize the tracker with a frame and bounding box"""
