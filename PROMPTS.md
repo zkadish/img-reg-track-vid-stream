@@ -20,3 +20,10 @@ Would you like me to:
 2. Implement additional selection tools (like polygon selection)?
 3. Add more UI customization options?
 4. Make any other improvements to the interface?
+
+Potential Improvements 💡
+1. Add Object Persistence: Track multiple objects simultaneously with unique IDs.
+2. Recording Capability: Add ability to save tracked video streams.
+3. Performance Metrics: Add more detailed performance monitoring (detection time, tracking accuracy, etc.).
+4. Configuration Hot-Reload: Allow changing settings without restarting the application.
+5. Region of Interest: Allow users to define specific areas for detection/tracking.
